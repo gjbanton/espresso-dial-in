@@ -1,897 +1,1468 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Espresso Dial-In</title>
-  <link rel="manifest" href="./manifest.json"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="DialIn"/>
-  <meta name="theme-color" content="#1a1a1a"/>
-  <link rel="apple-touch-icon" href="./icon-192.png"/>
+  <meta name="theme-color" content="#1a1a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Espresso Dial-In">
+  <meta name="description" content="Dial in espresso shots for a Baratza Sette 270 and Profitec MOVE.">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg: #1a1a1a;
-      --bg2: #242424;
-      --bg3: #2e2e2e;
-      --border: #383838;
-      --copper: #c8956c;
-      --copper2: #e0a87a;
-      --text: #f0ece6;
-      --text2: #a09890;
-      --green: #5cb85c;
-      --red: #d9534f;
-      --font-mono: 'SF Mono', 'Fira Mono', 'Menlo', monospace;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --bg-soft: #232323;
+      --bg-elevated: #2b2b2b;
+      --card: #202020;
+      --line: rgba(200, 149, 108, 0.16);
+      --text: #f2ece7;
+      --muted: #b9a998;
+      --accent: #c8956c;
+      --accent-strong: #e3b48f;
+      --success: #4da26f;
+      --danger: #b95f5f;
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+      --radius: 20px;
+      --mono: "SFMono-Regular", "Roboto Mono", "Menlo", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 16px; }
-
-    /* Layout */
-    #app { display: flex; flex-direction: column; height: 100%; }
-    #topbar {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: calc(var(--safe-top) + 12px) 16px 12px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
+    * {
+      box-sizing: border-box;
     }
-    #topbar h1 { font-size: 1.1rem; font-weight: 700; color: var(--copper); letter-spacing: 0.02em; }
-    #bean-badge {
-      font-size: 0.72rem; background: var(--bg3); border: 1px solid var(--copper);
-      color: var(--copper); padding: 3px 8px; border-radius: 12px; max-width: 160px;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    #save-indicator {
-      font-size: 0.72rem; color: var(--green); opacity: 0;
-      transition: opacity 0.4s; position: absolute; right: 16px; top: calc(var(--safe-top) + 14px);
-    }
-    #save-indicator.show { opacity: 1; }
 
-    #content { flex: 1; overflow-y: auto; padding: 16px 16px calc(var(--safe-bottom) + 72px); }
-
-    #tabnav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--bg2); border-top: 1px solid var(--border);
-      display: flex; padding-bottom: var(--safe-bottom);
-      z-index: 100;
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(200, 149, 108, 0.18), transparent 36%),
+        linear-gradient(180deg, #24201d 0%, #1a1a1a 34%);
+      color: var(--text);
+      font-family: var(--sans);
     }
-    .tab-btn {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      padding: 8px 4px; background: none; border: none; color: var(--text2);
-      font-size: 0.65rem; gap: 4px; cursor: pointer; transition: color 0.2s;
+
+    body {
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
     }
-    .tab-btn svg { width: 22px; height: 22px; }
-    .tab-btn.active { color: var(--copper); }
 
-    /* Tab panels */
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
 
-    /* Cards */
+    .app {
+      min-height: 100vh;
+      padding-bottom: calc(94px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(20px);
+      background: rgba(26, 26, 26, 0.85);
+      border-bottom: 1px solid var(--line);
+      padding: 16px 18px 14px;
+    }
+
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .saved-indicator {
+      min-width: 62px;
+      text-align: right;
+      color: var(--accent-strong);
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+
+    .saved-indicator.visible {
+      opacity: 1;
+    }
+
+    .ghost-button,
+    .action-button,
+    .danger-button,
+    .tab-button,
+    .mini-button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+    }
+
+    .ghost-button:active,
+    .action-button:active,
+    .danger-button:active,
+    .tab-button:active,
+    .mini-button:active {
+      transform: scale(0.98);
+    }
+
+    .ghost-button {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(200, 149, 108, 0.12);
+      color: var(--accent-strong);
+    }
+
+    .content {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .screen {
+      display: none;
+      gap: 16px;
+    }
+
+    .screen.active {
+      display: grid;
+    }
+
     .card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px; margin-bottom: 12px;
-    }
-    .card-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); margin-bottom: 12px; }
-
-    /* Forms */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
-    .field { display: flex; flex-direction: column; gap: 4px; }
-    label { font-size: 0.72rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
-    input, select {
-      background: var(--bg3); border: 1px solid var(--border); color: var(--text);
-      border-radius: 8px; padding: 10px 12px; font-size: 1rem;
-      font-family: var(--font-mono); width: 100%; appearance: none;
-      transition: border-color 0.2s;
-    }
-    input:focus, select:focus { outline: none; border-color: var(--copper); }
-    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a09890' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-
-    /* Buttons */
-    .btn {
-      width: 100%; padding: 14px; border: none; border-radius: 10px;
-      font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-    }
-    .btn:active { transform: scale(0.98); opacity: 0.85; }
-    .btn-primary { background: var(--copper); color: #1a1a1a; }
-    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-    .btn-danger { background: #4a1a1a; color: var(--red); border: 1px solid var(--red); }
-    .btn-sm { padding: 8px 14px; font-size: 0.85rem; width: auto; }
-
-    /* Ratio pill */
-    #ratio-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 14px; border-radius: 20px; font-family: var(--font-mono);
-      font-size: 0.9rem; font-weight: 700; margin-bottom: 12px;
-      transition: background 0.3s, color 0.3s;
-    }
-    #ratio-pill.good { background: rgba(92,184,92,0.15); color: var(--green); border: 1px solid rgba(92,184,92,0.3); }
-    #ratio-pill.bad  { background: rgba(217,83,79,0.15); color: var(--red);   border: 1px solid rgba(217,83,79,0.3); }
-    #ratio-pill.neutral { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
-
-    /* Recommendation box */
-    #rec-box {
-      background: var(--bg3); border: 1px solid var(--copper);
-      border-radius: 12px; padding: 14px; margin-top: 12px; display: none;
-    }
-    #rec-box.show { display: block; }
-    .rec-title { font-size: 0.75rem; color: var(--copper); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    .rec-vals { display: flex; gap: 16px; align-items: flex-end; }
-    .rec-val { text-align: center; }
-    .rec-val .big { font-family: var(--font-mono); font-size: 2rem; font-weight: 700; color: var(--copper); line-height: 1; }
-    .rec-val .lbl { font-size: 0.65rem; color: var(--text2); text-transform: uppercase; margin-top: 3px; }
-    .rec-reason { font-size: 0.8rem; color: var(--text2); margin-top: 10px; line-height: 1.4; }
-
-    /* Confidence bar */
-    .conf-bar-wrap { margin-top: 12px; }
-    .conf-bar-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text2); margin-bottom: 4px; }
-    .conf-bar-bg { background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
-    .conf-bar-fill { height: 100%; background: var(--copper); border-radius: 4px; transition: width 0.6s ease; }
-    #conf-badge {
-      display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 0.72rem;
-      font-weight: 600; margin-top: 6px;
-      background: var(--bg3); color: var(--text2); border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
     }
 
-    /* Shot history */
-    #shot-list { margin-top: 4px; }
-    .shot-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 0; border-bottom: 1px solid var(--border); font-family: var(--font-mono);
+    .card h2,
+    .card h3,
+    .card h4,
+    .card p {
+      margin-top: 0;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow {
+      color: var(--accent-strong);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-size: 0.72rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .banner {
+      display: grid;
+      gap: 6px;
+      padding: 14px;
+      border-radius: 18px;
+      background: linear-gradient(120deg, rgba(200, 149, 108, 0.18), rgba(200, 149, 108, 0.05));
+      border: 1px solid rgba(200, 149, 108, 0.18);
+    }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.035);
+      padding: 13px 14px;
+      min-height: 48px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(200, 149, 108, 0.5);
+      box-shadow: 0 0 0 3px rgba(200, 149, 108, 0.15);
+    }
+
+    .number {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
       font-size: 0.85rem;
-    }
-    .shot-item:last-child { border-bottom: none; }
-    .shot-grind { color: var(--copper); font-weight: 700; min-width: 40px; }
-    .shot-stats { color: var(--text2); font-size: 0.78rem; flex: 1; padding: 0 8px; }
-    .shot-ratio { font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; }
-    .shot-ratio.good { background: rgba(92,184,92,0.15); color: var(--green); }
-    .shot-ratio.bad  { background: rgba(217,83,79,0.15); color: var(--red); }
-    .shot-del { background: none; border: none; color: var(--text2); font-size: 1.1rem; cursor: pointer; padding: 4px; }
-
-    /* Beans tab */
-    .bean-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 14px; margin-bottom: 10px;
-      display: flex; align-items: flex-start; justify-content: space-between;
-      cursor: pointer; transition: border-color 0.2s;
-    }
-    .bean-card.active-bean { border-color: var(--copper); }
-    .bean-name { font-weight: 600; font-size: 1rem; margin-bottom: 3px; }
-    .bean-meta { font-size: 0.75rem; color: var(--text2); }
-    .bean-actions { display: flex; gap: 8px; align-items: center; }
-    .bean-active-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--copper); }
-
-    /* Insights */
-    .insight-section { margin-bottom: 20px; }
-    .insight-section h3 { font-size: 0.85rem; color: var(--copper); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .insight-section p, .insight-section li { font-size: 0.88rem; color: var(--text2); line-height: 1.6; }
-    .insight-section ul { padding-left: 16px; }
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .stat-box { background: var(--bg3); border-radius: 10px; padding: 14px; text-align: center; }
-    .stat-box .val { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700; color: var(--copper); }
-    .stat-box .lbl { font-size: 0.68rem; color: var(--text2); text-transform: uppercase; margin-top: 3px; }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-      display: flex; align-items: flex-end; z-index: 200; opacity: 0;
-      pointer-events: none; transition: opacity 0.25s;
-    }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal-sheet {
-      background: var(--bg2); border-radius: 18px 18px 0 0; width: 100%;
-      padding: 20px 20px calc(var(--safe-bottom) + 20px);
-      transform: translateY(100%); transition: transform 0.3s ease;
-    }
-    .modal-overlay.open .modal-sheet { transform: translateY(0); }
-    .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
-    .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-    .drag-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
-
-    /* Roast badge */
-    .roast-badge {
-      display: inline-block; font-size: 0.65rem; padding: 2px 7px; border-radius: 8px;
-      text-transform: capitalize; font-weight: 600;
-      background: var(--bg3); color: var(--text2); border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    /* Empty state */
-    .empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 0.9rem; }
-    .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .pill.good {
+      color: #dcf4e5;
+      background: rgba(77, 162, 111, 0.16);
+      border-color: rgba(77, 162, 111, 0.35);
+    }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .pill.bad {
+      color: #f6dddd;
+      background: rgba(185, 95, 95, 0.17);
+      border-color: rgba(185, 95, 95, 0.34);
+    }
+
+    .action-button,
+    .danger-button,
+    .mini-button {
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-weight: 600;
+    }
+
+    .action-button {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #1e140e;
+      box-shadow: 0 10px 28px rgba(200, 149, 108, 0.22);
+    }
+
+    .danger-button {
+      width: 100%;
+      background: rgba(185, 95, 95, 0.18);
+      color: #f5dede;
+      border: 1px solid rgba(185, 95, 95, 0.28);
+    }
+
+    .mini-button {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .recommendation {
+      display: grid;
+      gap: 12px;
+    }
+
+    .recommendation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .metric-label {
+      font-size: 0.77rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 1.08rem;
+      font-family: var(--mono);
+    }
+
+    .confidence {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #7e5e46, var(--accent-strong));
+      width: 0%;
+      transition: width 220ms ease;
+    }
+
+    .bean-list,
+    .shot-list,
+    .equipment-list,
+    .stats-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bean-item,
+    .shot-item {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .bean-head,
+    .shot-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bean-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .bean-meta,
+    .shot-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(200, 149, 108, 0.1);
+      color: var(--accent-strong);
+      font-size: 0.76rem;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px dashed rgba(200, 149, 108, 0.28);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(26, 26, 26, 0), rgba(26, 26, 26, 0.9) 18%, rgba(26, 26, 26, 0.97));
+      backdrop-filter: blur(18px);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 8px;
+      border-radius: 24px;
+      background: rgba(40, 40, 40, 0.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .tab-button {
+      padding: 13px 10px;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .tab-button.active {
+      color: #20140c;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    }
+
+    dialog {
+      width: min(92vw, 520px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 0;
+      background: #1f1f1f;
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-body {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+    }
+
+    .helper {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .list-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (min-width: 720px) {
+      .content {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+    }
   </style>
 </head>
 <body>
-<div id="app">
-  <!-- Top bar -->
-  <div id="topbar">
-    <h1>☕ Espresso Dial-In</h1>
-    <div id="bean-badge">No bean selected</div>
-    <button class="btn btn-secondary btn-sm" onclick="openDataModal()" style="margin-left:8px;padding:6px 10px;font-size:0.75rem;">⋯</button>
-    <span id="save-indicator">✓ Saved</span>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="title-wrap">
+          <h1>Espresso Dial-In</h1>
+          <div class="subtitle">Baratza Sette 270 × Profitec MOVE</div>
+        </div>
+        <div class="top-actions">
+          <div id="savedIndicator" class="saved-indicator">✓ Saved</div>
+          <button id="dataButton" class="ghost-button" type="button">Data</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section id="dialTab" class="screen active" aria-label="Dial In">
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Portafilter Basket</div>
+              <h2>Choose the basket you are dialing in</h2>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="portafilterInput">Included basket</label>
+              <select id="portafilterInput"></select>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Target recipe</div>
+              <div id="targetRecipeValue" class="metric-value">7g in → 14g out</div>
+            </div>
+          </div>
+          <div id="portafilterHelper" class="helper">The selected basket sets the target dose and a 1:2 yield target from the Profitec MOVE manual.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Active Bean</div>
+              <h2 id="activeBeanTitle">No bean selected</h2>
+            </div>
+            <div id="activeBeanOffset" class="tag">Offset 0</div>
+          </div>
+          <div id="activeBeanBanner" class="banner">
+            <strong>Choose a bean in the Beans tab.</strong>
+            <span class="muted">Roast level shifts the grinder prior before each recommendation.</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Shot Log</div>
+              <h2>Dial in the next pull</h2>
+            </div>
+            <div id="badgePill" class="tag">Exploring</div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="macroInput">Macro dial</label>
+              <input id="macroInput" type="number" min="1" max="31" step="1" value="9" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="microInput">Micro dial</label>
+              <select id="microInput"></select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="grindTimeInput">Grind time (sec)</label>
+              <input id="grindTimeInput" type="number" min="0" max="60" step="0.1" value="10" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="doseInput">Dose (g)</label>
+              <input id="doseInput" type="number" min="0" max="30" step="0.1" value="18" inputmode="decimal">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="shotTimeInput">Shot time (sec)</label>
+              <input id="shotTimeInput" type="number" min="0" max="90" step="0.1" value="30" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="yieldInput">Yield (g)</label>
+              <input id="yieldInput" type="number" min="0" max="80" step="0.1" value="36" inputmode="decimal">
+            </div>
+          </div>
+
+          <div class="pill-row">
+            <div id="grindFloatPill" class="pill number">Grind 9.444</div>
+            <div id="ratioPill" class="pill good number">Ratio 2.00</div>
+            <div id="targetPill" class="pill">Target 7g → 14g in 25-35s</div>
+          </div>
+
+          <div style="height: 14px;"></div>
+          <button id="logShotButton" class="action-button" type="button">Log Shot &amp; Get Next Recommendation</button>
+        </article>
+
+        <article class="card recommendation">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Recommendation</div>
+              <h2>Next adjustment</h2>
+            </div>
+          </div>
+          <div id="recommendationBody" class="empty-state">Log your first shot to generate a grinder and grind-time recommendation.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Recent Shots</div>
+              <h2>Learning history</h2>
+            </div>
+          </div>
+          <div id="recentShots" class="shot-list">
+            <div class="empty-state">No shots logged yet.</div>
+          </div>
+        </article>
+      </section>
+
+      <section id="beansTab" class="screen" aria-label="Beans">
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Bean Library</div>
+              <h2>Add or edit beans</h2>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="beanNameInput">Bean name</label>
+              <input id="beanNameInput" type="text" placeholder="Bloom Espresso">
+            </div>
+            <div class="field">
+              <label for="beanRoasterInput">Roaster</label>
+              <input id="beanRoasterInput" type="text" placeholder="Your favorite roaster">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="beanRoastInput">Roast level</label>
+              <select id="beanRoastInput">
+                <option value="light">Light</option>
+                <option value="medium-light">Medium-light</option>
+                <option value="medium" selected>Medium</option>
+                <option value="medium-dark">Medium-dark</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="beanProcessInput">Processing method</label>
+              <input id="beanProcessInput" type="text" placeholder="Washed, natural, honey...">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <button id="saveBeanButton" class="action-button" type="button">Save Bean</button>
+            <button id="cancelEditBeanButton" class="mini-button" type="button" hidden>Cancel Edit</button>
+          </div>
+          <div class="helper">Light roasts bias the prior finer by +2 steps; dark roasts bias it coarser by -2.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Bean List</div>
+              <h2>Active bean drives the prior</h2>
+            </div>
+          </div>
+          <div id="beanList" class="bean-list">
+            <div class="empty-state">Create your first bean to start tracking roast-based offsets.</div>
+          </div>
+        </article>
+      </section>
+
+      <section id="insightsTab" class="screen" aria-label="Insights">
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Bayesian Model</div>
+              <h2>How the app learns</h2>
+            </div>
+          </div>
+          <p>The grinder model starts with a prior that finer settings slow shots by about <span class="number">2.5s</span> per step. Each logged shot updates that belief with closed-form normal-normal posterior math, then projects the grind change needed to land near a <span class="number">30s</span> shot.</p>
+          <p>The dose model does the same for grind time, learning how many grams per second your grinder is delivering so the next recommendation nudges grind time toward the selected basket's target dose.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Aggregate Stats</div>
+              <h2>Current picture</h2>
+            </div>
+          </div>
+          <div id="statsGrid" class="stats-grid"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Equipment</div>
+              <h2>Setup reference</h2>
+            </div>
+          </div>
+          <div class="equipment-list">
+            <div class="metric">
+              <div class="metric-label">Grinder</div>
+              <div class="metric-value">Baratza Sette 270</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Machine</div>
+              <div class="metric-value">Profitec MOVE</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Target recipe</div>
+              <div id="equipmentTargetRecipe" class="metric-value">7g in → 14g out in 25-35s</div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Primary">
+      <div class="tabs">
+        <button class="tab-button active" data-tab="dialTab" type="button">Dial In</button>
+        <button class="tab-button" data-tab="beansTab" type="button">Beans</button>
+        <button class="tab-button" data-tab="insightsTab" type="button">Insights</button>
+      </div>
+    </nav>
   </div>
 
-  <!-- Content -->
-  <div id="content">
-    <!-- DIAL IN TAB -->
-    <div id="tab-dialin" class="tab-panel active">
-      <div class="card">
-        <div class="card-title">Log a Shot</div>
-        <div class="form-row">
-          <div class="field">
-            <label>Macro (1–31)</label>
-            <input type="number" id="in-macro" min="1" max="31" value="9" oninput="updateRatioPill()"/>
-          </div>
-          <div class="field">
-            <label>Micro (A–I)</label>
-            <select id="in-micro" onchange="updateRatioPill()">
-              <option>A</option><option>B</option><option>C</option>
-              <option selected>D</option><option>E</option><option>F</option>
-              <option>G</option><option>H</option><option>I</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row three">
-          <div class="field">
-            <label>Grind (s)</label>
-            <input type="number" id="in-grindtime" min="1" max="60" value="10" step="0.5" oninput="updateRatioPill()"/>
-          </div>
-          <div class="field">
-            <label>Dose (g)</label>
-            <input type="number" id="in-dose" min="1" max="30" value="18" step="0.1" oninput="updateRatioPill()"/>
-          </div>
-          <div class="field">
-            <label>Shot (s)</label>
-            <input type="number" id="in-shottime" min="1" max="120" value="30" oninput="updateRatioPill()"/>
-          </div>
-        </div>
-        <div class="field" style="margin-bottom:12px;">
-          <label>Yield (g)</label>
-          <input type="number" id="in-yield" min="1" max="100" value="36" step="0.1" oninput="updateRatioPill()"/>
-        </div>
-        <div id="ratio-pill" class="neutral">— : —</div>
-        <button class="btn btn-primary" onclick="logShot()">Log Shot &amp; Get Recommendation</button>
-      </div>
-
-      <div id="rec-box">
-        <div class="rec-title">⟳ Next Recommended Setting</div>
-        <div class="rec-vals">
-          <div class="rec-val">
-            <div class="big" id="rec-macro">—</div>
-            <div class="lbl">Macro</div>
-          </div>
-          <div class="rec-val">
-            <div class="big" id="rec-micro">—</div>
-            <div class="lbl">Micro</div>
-          </div>
-          <div class="rec-val">
-            <div class="big" id="rec-grindtime">—</div>
-            <div class="lbl">Grind s</div>
-          </div>
-        </div>
-        <div class="rec-reason" id="rec-reason"></div>
-        <div class="conf-bar-wrap">
-          <div class="conf-bar-labels">
-            <span>Confidence</span>
-            <span id="conf-badge">Exploring</span>
-          </div>
-          <div class="conf-bar-bg"><div class="conf-bar-fill" id="conf-bar" style="width:0%"></div></div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:12px;">
-        <div class="card-title">Shot History</div>
-        <div id="shot-list"><div class="empty"><div class="empty-icon">📋</div>No shots logged yet</div></div>
-      </div>
-    </div>
-
-    <!-- BEANS TAB -->
-    <div id="tab-beans" class="tab-panel">
-      <div class="card">
-        <div class="card-title" id="bean-form-title">Add Bean</div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>Bean Name</label>
-          <input type="text" id="bn-name" placeholder="e.g. Ethiopia Yirgacheffe"/>
-        </div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>Roaster</label>
-          <input type="text" id="bn-roaster" placeholder="e.g. Blue Bottle"/>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Roast Level</label>
-            <select id="bn-roast">
-              <option value="light">Light</option>
-              <option value="medium-light">Med-Light</option>
-              <option value="medium" selected>Medium</option>
-              <option value="medium-dark">Med-Dark</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Processing</label>
-            <select id="bn-process">
-              <option value="washed">Washed</option>
-              <option value="natural">Natural</option>
-              <option value="honey">Honey</option>
-              <option value="anaerobic">Anaerobic</option>
-              <option value="wet-hulled">Wet Hulled</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:10px;">
-          <button class="btn btn-primary" style="flex:1" onclick="saveBean()">Save Bean</button>
-          <button class="btn btn-secondary btn-sm" id="cancel-bean-edit" onclick="cancelBeanEdit()" style="display:none;">Cancel</button>
-        </div>
-      </div>
-
-      <div id="bean-list"></div>
-    </div>
-
-    <!-- INSIGHTS TAB -->
-    <div id="tab-insights" class="tab-panel">
-      <div class="card insight-section">
-        <h3>Aggregate Stats</h3>
-        <div class="stat-grid">
-          <div class="stat-box"><div class="val" id="st-shots">0</div><div class="lbl">Shots Logged</div></div>
-          <div class="stat-box"><div class="val" id="st-avg-time">—</div><div class="lbl">Avg Shot Time</div></div>
-          <div class="stat-box"><div class="val" id="st-avg-ratio">—</div><div class="lbl">Avg Ratio</div></div>
-          <div class="stat-box"><div class="val" id="st-in-range">—</div><div class="lbl">In Target Range</div></div>
-        </div>
-      </div>
-
-      <div class="card insight-section">
-        <h3>Bayesian Model</h3>
-        <p>Each shot updates two conjugate Gaussian priors:</p>
-        <ul style="margin-top:8px;">
-          <li><strong>Model 1 — Grind→Time:</strong> slope prior μ=−2.5 s/step, σ²=1.5, noise σ²=4.0. Predicts the grind setting needed for a 30 s shot.</li>
-          <li style="margin-top:6px;"><strong>Model 2 — Grind Time→Dose:</strong> slope prior μ=1.8 g/s, σ²=0.5. Predicts dose from grind duration.</li>
-        </ul>
-        <p style="margin-top:10px;">After each shot the posteriors are updated via: <span style="font-family:var(--font-mono);font-size:0.8rem;color:var(--copper);">σ²ₙ = 1/(1/σ²₀ + Σxᵢ²/σ²ₙₒᵢₛₑ)</span>, then the slope mean is adjusted towards observed data. Confidence grows as shots accumulate.</p>
-        <p style="margin-top:8px;">Roast offsets shift the initial prior: Light +2 steps coarser, Dark −2 steps finer.</p>
-      </div>
-
-      <div class="card insight-section">
-        <h3>Bayesian Posterior</h3>
-        <div class="stat-grid">
-          <div class="stat-box"><div class="val" id="bay-slope" style="font-size:1.2rem;">—</div><div class="lbl">Slope (s/step)</div></div>
-          <div class="stat-box"><div class="val" id="bay-var" style="font-size:1.2rem;">—</div><div class="lbl">Slope Variance</div></div>
-        </div>
-      </div>
-
-      <div class="card insight-section">
-        <h3>Target Parameters</h3>
-        <ul>
-          <li>Dose: <strong>18 g</strong></li>
-          <li>Yield: <strong>36 g</strong> (2:1 ratio)</li>
-          <li>Shot time: <strong>25–35 s</strong> (target 30 s)</li>
-          <li>Good ratio range: <strong>1:1.8 – 1:2.2</strong></li>
-        </ul>
-      </div>
-
-      <div class="card insight-section">
-        <h3>Equipment</h3>
-        <ul>
-          <li><strong>Grinder:</strong> Baratza Sette 270</li>
-          <li><strong>Macro:</strong> 1–31 (numeric ring)</li>
-          <li><strong>Micro:</strong> A–I (9 steps, A=finest)</li>
-          <li><strong>Machine:</strong> Profitec MOVE</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom nav -->
-  <nav id="tabnav">
-    <button class="tab-btn active" id="nav-dialin" onclick="switchTab('dialin')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      Dial In
-    </button>
-    <button class="tab-btn" id="nav-beans" onclick="switchTab('beans')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="12" rx="5" ry="9" transform="rotate(-30 12 12)"/><path d="M12 3C8 7 8 17 12 21"/></svg>
-      Beans
-    </button>
-    <button class="tab-btn" id="nav-insights" onclick="switchTab('insights')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Insights
-    </button>
-  </nav>
-</div>
-
-<!-- Data Modal -->
-<div class="modal-overlay" id="data-modal" onclick="closeDataModal(event)">
-  <div class="modal-sheet">
-    <div class="drag-handle"></div>
-    <div class="modal-title">Data &amp; Export</div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="exportData()">⬇ Export JSON</button>
-      <button class="btn btn-secondary" onclick="importData()">⬆ Import JSON</button>
-      <button class="btn btn-danger" onclick="clearAllData()">⚠ Clear All Data</button>
-      <button class="btn btn-secondary" onclick="closeDataModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- Bean Edit Modal -->
-<div class="modal-overlay" id="bean-modal" onclick="closeBeanModal(event)">
-  <div class="modal-sheet">
-    <div class="drag-handle"></div>
-    <div class="modal-title" id="bm-title">Edit Bean</div>
-    <div class="modal-actions" id="bm-actions"></div>
-  </div>
-</div>
-
-<input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)"/>
-
-<script>
-'use strict';
-
-// ─── Constants ───────────────────────────────────────────────
-const STORE_KEY = 'espresso_dial_in_v3';
-const MICROS = 'ABCDEFGHI';
-const ROAST_OFFSETS = { light: 2, 'medium-light': 1, medium: 0, 'medium-dark': -1, dark: -2 };
-
-// ─── State ────────────────────────────────────────────────────
-let state = {
-  shots: [],        // { id, ts, macro, micro, grindFloat, grindTime, dose, shotTime, yieldG }
-  beans: [],        // { id, name, roaster, roast, process }
-  activeBeanId: null,
-  bayesian: {       // persisted posterior
-    slopeMean: -2.5,
-    slopeVar: 1.5,
-    doseSlopeMean: 1.8,
-    doseSlopeVar: 0.5
-  }
-};
-let editingBeanId = null;
-
-// ─── Persistence ──────────────────────────────────────────────
-function save() {
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
-  const ind = document.getElementById('save-indicator');
-  ind.classList.add('show');
-  setTimeout(() => ind.classList.remove('show'), 1500);
-}
-
-function load() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) Object.assign(state, JSON.parse(raw));
-  } catch (e) { /* ignore */ }
-}
-
-// ─── Grind encoding ──────────────────────────────────────────
-function encodeGrind(macro, micro) {
-  const idx = MICROS.indexOf(micro);
-  return macro + idx / 9;
-}
-
-function decodeGrind(f) {
-  const macro = Math.max(1, Math.min(31, Math.floor(f + 0.055)));
-  const rem = f - Math.floor(f);
-  const idx = Math.max(0, Math.min(8, Math.round(rem * 9)));
-  return { macro, micro: MICROS[idx] };
-}
-
-// ─── Bayesian Engine ─────────────────────────────────────────
-function bayesianUpdate(shots, activeBean) {
-  // Reset to prior (with roast offset applied)
-  let slopeMean = -2.5;
-  let slopeVar  = 1.5;
-  const noiseVar = 4.0;
-
-  let doseSlopeMean = 1.8;
-  let doseSlopeVar  = 0.5;
-  const doseNoiseVar = 1.0;
-
-  // Roast offset shifts the reference grind prior
-  let roastOffset = 0;
-  if (activeBean) roastOffset = ROAST_OFFSETS[activeBean.roast] || 0;
-
-  if (shots.length >= 2) {
-    // Compute centered x (grind) and y (shotTime) values
-    const xs = shots.map(s => s.grindFloat + roastOffset * 0.111);
-    const ys = shots.map(s => s.shotTime);
-    const xbar = xs.reduce((a,b)=>a+b,0)/xs.length;
-    const ybar = ys.reduce((a,b)=>a+b,0)/ys.length;
-
-    let sxy = 0, sxx = 0;
-    for (let i = 0; i < xs.length; i++) {
-      sxy += (xs[i]-xbar)*(ys[i]-ybar);
-      sxx += (xs[i]-xbar)**2;
-    }
-
-    // Bayesian update (conjugate normal-normal)
-    const precPrior = 1 / slopeVar;
-    const precLik   = sxx / noiseVar;
-    const newVar    = 1 / (precPrior + precLik);
-    const newMean   = newVar * (slopeMean * precPrior + sxy / noiseVar);
-    slopeMean = newMean;
-    slopeVar  = newVar;
-
-    // Dose model
-    const gts = shots.map(s => s.grindTime);
-    const ds  = shots.map(s => s.dose);
-    const gtbar = gts.reduce((a,b)=>a+b,0)/gts.length;
-    const dbar  = ds.reduce((a,b)=>a+b,0)/ds.length;
-    let sgd=0, sgg=0;
-    for (let i = 0; i < gts.length; i++) {
-      sgd += (gts[i]-gtbar)*(ds[i]-dbar);
-      sgg += (gts[i]-gtbar)**2;
-    }
-    const dPrecPrior = 1/doseSlopeVar;
-    const dPrecLik   = sgg/doseNoiseVar;
-    const dNewVar    = 1/(dPrecPrior+dPrecLik);
-    const dNewMean   = dNewVar*(doseSlopeMean*dPrecPrior + sgd/doseNoiseVar);
-    doseSlopeMean = dNewMean;
-    doseSlopeVar  = dNewVar;
-  }
-
-  state.bayesian = { slopeMean, slopeVar, doseSlopeMean, doseSlopeVar };
-  return state.bayesian;
-}
-
-function recommend(shots, activeBean) {
-  const bay = bayesianUpdate(shots, activeBean);
-  const roastOffset = activeBean ? (ROAST_OFFSETS[activeBean.roast] || 0) : 0;
-  const TARGET_TIME = 30;
-  const TARGET_DOSE = 18;
-
-  let recGrind, recGrindTime, reason;
-
-  if (shots.length === 0) {
-    // Default start
-    recGrind = 9 + roastOffset * 0.111;
-    recGrindTime = 10;
-    reason = 'Starting with a typical espresso range. Adjust based on your first shot.';
-  } else {
-    const last = shots[shots.length - 1];
-    const timeDiff = TARGET_TIME - last.shotTime;
-
-    // Predict grind adjustment needed
-    // Δtime = slope * Δgrind  =>  Δgrind = Δtime / slope
-    let grindAdj = 0;
-    if (Math.abs(bay.slopeMean) > 0.01) {
-      grindAdj = timeDiff / bay.slopeMean;
-    }
-    recGrind = Math.max(1, Math.min(31.888, last.grindFloat + grindAdj));
-
-    // Predict grind time for 18g dose
-    if (Math.abs(bay.doseSlopeMean) > 0.01) {
-      recGrindTime = Math.max(3, Math.min(30, TARGET_DOSE / bay.doseSlopeMean));
-    } else {
-      recGrindTime = last.grindTime;
-    }
-
-    const dir = timeDiff > 0 ? 'finer' : 'coarser';
-    const adj = Math.abs(grindAdj).toFixed(2);
-    reason = `Shot was ${Math.abs(timeDiff).toFixed(1)}s ${timeDiff>0?'fast':'slow'}. Go ${adj} steps ${dir} (slope: ${bay.slopeMean.toFixed(2)} s/step).`;
-  }
-
-  const decoded = decodeGrind(recGrind);
-  return {
-    macro: decoded.macro,
-    micro: decoded.micro,
-    grindFloat: recGrind,
-    grindTime: Math.round(recGrindTime * 2) / 2,
-    reason,
-    slopeMean: bay.slopeMean,
-    slopeVar: bay.slopeVar,
-    shots: shots.length
-  };
-}
-
-function confidenceInfo(n) {
-  if (n < 3)  return { label: 'Exploring', pct: Math.round(n/3*30) };
-  if (n < 6)  return { label: 'Learning',  pct: Math.round(30 + (n-3)/3*40) };
-  if (n < 12) return { label: 'Calibrating', pct: Math.round(70 + (n-6)/6*20) };
-  return { label: 'Confident', pct: 100 };
-}
-
-// ─── UI helpers ──────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('nav-'+tab).classList.add('active');
-  if (tab === 'insights') renderInsights();
-}
-
-function updateRatioPill() {
-  const dose  = parseFloat(document.getElementById('in-dose').value) || 0;
-  const yld   = parseFloat(document.getElementById('in-yield').value) || 0;
-  const pill  = document.getElementById('ratio-pill');
-  if (!dose || !yld) { pill.className='neutral'; pill.textContent='— : —'; return; }
-  const r = yld / dose;
-  const good = r >= 1.8 && r <= 2.2;
-  pill.className = good ? 'good' : 'bad';
-  pill.textContent = `1 : ${r.toFixed(2)}  ${good ? '✓' : '⚠'}`;
-}
-
-function logShot() {
-  const macro     = parseInt(document.getElementById('in-macro').value);
-  const micro     = document.getElementById('in-micro').value;
-  const grindTime = parseFloat(document.getElementById('in-grindtime').value);
-  const dose      = parseFloat(document.getElementById('in-dose').value);
-  const shotTime  = parseFloat(document.getElementById('in-shottime').value);
-  const yieldG    = parseFloat(document.getElementById('in-yield').value);
-
-  if (!macro||!micro||!grindTime||!dose||!shotTime||!yieldG) {
-    alert('Please fill in all fields.'); return;
-  }
-
-  const shot = {
-    id: Date.now(),
-    ts: new Date().toISOString(),
-    macro, micro,
-    grindFloat: encodeGrind(macro, micro),
-    grindTime, dose, shotTime, yieldG
-  };
-  state.shots.push(shot);
-  save();
-
-  const activeBean = state.beans.find(b => b.id === state.activeBeanId) || null;
-  const rec = recommend(state.shots, activeBean);
-  showRecommendation(rec);
-  renderShotList();
-}
-
-function showRecommendation(rec) {
-  document.getElementById('rec-macro').textContent     = rec.macro;
-  document.getElementById('rec-micro').textContent     = rec.micro;
-  document.getElementById('rec-grindtime').textContent = rec.grindTime + 's';
-  document.getElementById('rec-reason').textContent    = rec.reason;
-
-  const ci = confidenceInfo(rec.shots);
-  document.getElementById('conf-bar').style.width = ci.pct + '%';
-  const badge = document.getElementById('conf-badge');
-  badge.textContent = ci.label;
-
-  document.getElementById('rec-box').classList.add('show');
-}
-
-function renderShotList() {
-  const el = document.getElementById('shot-list');
-  if (!state.shots.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No shots logged yet</div>';
-    return;
-  }
-  el.innerHTML = [...state.shots].reverse().map(s => {
-    const ratio = s.yieldG / s.dose;
-    const good  = ratio >= 1.8 && ratio <= 2.2;
-    const dt    = new Date(s.ts);
-    const time  = dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    return `
-      <div class="shot-item">
-        <div class="shot-grind">${s.macro}${s.micro}</div>
-        <div class="shot-stats">${s.dose}g → ${s.yieldG}g · ${s.shotTime}s · ${time}</div>
-        <div class="shot-ratio ${good?'good':'bad'}">1:${ratio.toFixed(1)}</div>
-        <button class="shot-del" onclick="deleteShot(${s.id})">✕</button>
-      </div>`;
-  }).join('');
-}
-
-function deleteShot(id) {
-  state.shots = state.shots.filter(s => s.id !== id);
-  save();
-  renderShotList();
-}
-
-// ─── Beans ────────────────────────────────────────────────────
-function saveBean() {
-  const name    = document.getElementById('bn-name').value.trim();
-  const roaster = document.getElementById('bn-roaster').value.trim();
-  const roast   = document.getElementById('bn-roast').value;
-  const process = document.getElementById('bn-process').value;
-  if (!name) { alert('Bean name is required.'); return; }
-
-  if (editingBeanId) {
-    const b = state.beans.find(b => b.id === editingBeanId);
-    if (b) Object.assign(b, { name, roaster, roast, process });
-    editingBeanId = null;
-    document.getElementById('bean-form-title').textContent = 'Add Bean';
-    document.getElementById('cancel-bean-edit').style.display = 'none';
-  } else {
-    state.beans.push({ id: Date.now(), name, roaster, roast, process });
-  }
-
-  save();
-  clearBeanForm();
-  renderBeanList();
-}
-
-function clearBeanForm() {
-  document.getElementById('bn-name').value    = '';
-  document.getElementById('bn-roaster').value = '';
-  document.getElementById('bn-roast').value   = 'medium';
-  document.getElementById('bn-process').value = 'washed';
-}
-
-function cancelBeanEdit() {
-  editingBeanId = null;
-  document.getElementById('bean-form-title').textContent = 'Add Bean';
-  document.getElementById('cancel-bean-edit').style.display = 'none';
-  clearBeanForm();
-}
-
-function setActiveBean(id) {
-  state.activeBeanId = (state.activeBeanId === id) ? null : id;
-  save();
-  renderBeanList();
-  updateBeanBadge();
-}
-
-function editBean(id) {
-  const b = state.beans.find(b => b.id === id);
-  if (!b) return;
-  editingBeanId = id;
-  document.getElementById('bn-name').value    = b.name;
-  document.getElementById('bn-roaster').value = b.roaster;
-  document.getElementById('bn-roast').value   = b.roast;
-  document.getElementById('bn-process').value = b.process;
-  document.getElementById('bean-form-title').textContent = 'Edit Bean';
-  document.getElementById('cancel-bean-edit').style.display = '';
-  document.getElementById('bn-name').focus();
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
-
-function deleteBean(id) {
-  if (!confirm('Delete this bean?')) return;
-  state.beans = state.beans.filter(b => b.id !== id);
-  if (state.activeBeanId === id) state.activeBeanId = null;
-  save();
-  renderBeanList();
-  updateBeanBadge();
-}
-
-function updateBeanBadge() {
-  const bean = state.beans.find(b => b.id === state.activeBeanId);
-  const badge = document.getElementById('bean-badge');
-  badge.textContent = bean ? `☕ ${bean.name}` : 'No bean selected';
-}
-
-function renderBeanList() {
-  const el = document.getElementById('bean-list');
-  if (!state.beans.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🫘</div>No beans yet — add one above</div>';
-    return;
-  }
-  el.innerHTML = state.beans.map(b => {
-    const isActive = b.id === state.activeBeanId;
-    const offset   = ROAST_OFFSETS[b.roast] || 0;
-    const offsetTxt = offset === 0 ? '' : ` · offset ${offset>0?'+':''}${offset} steps`;
-    return `
-      <div class="bean-card ${isActive?'active-bean':''}" onclick="setActiveBean(${b.id})">
+  <dialog id="dataModal">
+    <div class="modal-body">
+      <div class="card-title">
         <div>
-          <div class="bean-name">${b.name}</div>
-          <div class="bean-meta">${b.roaster ? b.roaster+' · ' : ''}<span class="roast-badge">${b.roast}</span> · ${b.process}${offsetTxt}</div>
+          <div class="eyebrow">Data Tools</div>
+          <h2>Backup and restore</h2>
         </div>
-        <div class="bean-actions">
-          ${isActive ? '<div class="bean-active-dot"></div>' : ''}
-          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();editBean(${b.id})">Edit</button>
-          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();deleteBean(${b.id})" style="color:var(--red)">✕</button>
-        </div>
-      </div>`;
-  }).join('');
-}
+        <button id="closeDataModalButton" class="ghost-button" type="button">Close</button>
+      </div>
+      <div class="list-inline">
+        <button id="exportButton" class="mini-button" type="button">Export JSON</button>
+        <button id="importButton" class="mini-button" type="button">Import JSON</button>
+      </div>
+      <div class="field">
+        <label for="dataTextarea">JSON payload</label>
+        <textarea id="dataTextarea" placeholder="Exported app state will appear here. Paste JSON here to import."></textarea>
+      </div>
+      <div class="helper">Import replaces the entire saved app state after validation.</div>
+      <button id="clearButton" class="danger-button" type="button">Clear All Data</button>
+    </div>
+  </dialog>
 
-// ─── Insights ────────────────────────────────────────────────
-function renderInsights() {
-  const n = state.shots.length;
-  document.getElementById('st-shots').textContent = n;
+  <script>
+    (function () {
+      const STORAGE_KEY = "espresso_dial_in_v3";
+      const SCHEMA_VERSION = 3;
+      const CACHEABLE_APP_NAME = "Espresso Dial-In";
+      const MICRO_STEPS = "ABCDEFGHI".split("");
+      const PORTAFILTERS = [
+        { id: "single", label: "Single basket", basketLabel: "1 cup", dose: 7, yield: 14 },
+        { id: "double", label: "Double basket", basketLabel: "2 cups", dose: 14, yield: 28 },
+        { id: "triple", label: "Triple basket", basketLabel: "21 g basket", dose: 21, yield: 42 }
+      ];
+      const ROAST_OFFSETS = {
+        light: 2,
+        "medium-light": 1,
+        medium: 0,
+        "medium-dark": -1,
+        dark: -2
+      };
+      const SHOT_PRIOR = { mean: -2.5, variance: 1.5, noiseVariance: 4.0 };
+      const DOSE_PRIOR = { mean: 1.8, variance: 0.5, noiseVariance: 1.0 };
+      const TARGET_SHOT_TIME = 30;
+      const TARGET_RATIO_MIN = 1.8;
+      const TARGET_RATIO_MAX = 2.2;
+      const MIN_GRIND_TIME = 4;
+      const MAX_GRIND_TIME = 20;
 
-  if (n > 0) {
-    const avgTime  = state.shots.reduce((a,s)=>a+s.shotTime,0)/n;
-    const avgRatio = state.shots.reduce((a,s)=>a+s.yieldG/s.dose,0)/n;
-    const inRange  = state.shots.filter(s=>{ const r=s.yieldG/s.dose; return r>=1.8&&r<=2.2; }).length;
-    document.getElementById('st-avg-time').textContent  = avgTime.toFixed(1)+'s';
-    document.getElementById('st-avg-ratio').textContent = '1:'+avgRatio.toFixed(2);
-    document.getElementById('st-in-range').textContent  = Math.round(inRange/n*100)+'%';
-  } else {
-    document.getElementById('st-avg-time').textContent  = '—';
-    document.getElementById('st-avg-ratio').textContent = '—';
-    document.getElementById('st-in-range').textContent  = '—';
-  }
+      const els = {
+        savedIndicator: document.getElementById("savedIndicator"),
+        dataButton: document.getElementById("dataButton"),
+        dataModal: document.getElementById("dataModal"),
+        closeDataModalButton: document.getElementById("closeDataModalButton"),
+        exportButton: document.getElementById("exportButton"),
+        importButton: document.getElementById("importButton"),
+        clearButton: document.getElementById("clearButton"),
+        dataTextarea: document.getElementById("dataTextarea"),
+        portafilterInput: document.getElementById("portafilterInput"),
+        targetRecipeValue: document.getElementById("targetRecipeValue"),
+        targetPill: document.getElementById("targetPill"),
+        equipmentTargetRecipe: document.getElementById("equipmentTargetRecipe"),
+        macroInput: document.getElementById("macroInput"),
+        microInput: document.getElementById("microInput"),
+        grindTimeInput: document.getElementById("grindTimeInput"),
+        doseInput: document.getElementById("doseInput"),
+        shotTimeInput: document.getElementById("shotTimeInput"),
+        yieldInput: document.getElementById("yieldInput"),
+        grindFloatPill: document.getElementById("grindFloatPill"),
+        ratioPill: document.getElementById("ratioPill"),
+        logShotButton: document.getElementById("logShotButton"),
+        recommendationBody: document.getElementById("recommendationBody"),
+        badgePill: document.getElementById("badgePill"),
+        recentShots: document.getElementById("recentShots"),
+        activeBeanTitle: document.getElementById("activeBeanTitle"),
+        activeBeanBanner: document.getElementById("activeBeanBanner"),
+        activeBeanOffset: document.getElementById("activeBeanOffset"),
+        beanNameInput: document.getElementById("beanNameInput"),
+        beanRoasterInput: document.getElementById("beanRoasterInput"),
+        beanRoastInput: document.getElementById("beanRoastInput"),
+        beanProcessInput: document.getElementById("beanProcessInput"),
+        saveBeanButton: document.getElementById("saveBeanButton"),
+        cancelEditBeanButton: document.getElementById("cancelEditBeanButton"),
+        beanList: document.getElementById("beanList"),
+        statsGrid: document.getElementById("statsGrid"),
+        tabs: Array.from(document.querySelectorAll(".tab-button")),
+        screens: Array.from(document.querySelectorAll(".screen"))
+      };
 
-  const bay = state.bayesian;
-  document.getElementById('bay-slope').textContent = bay.slopeMean.toFixed(3);
-  document.getElementById('bay-var').textContent   = bay.slopeVar.toFixed(3);
-}
+      const state = loadState();
+      let editingBeanId = null;
+      let saveIndicatorTimer = null;
 
-// ─── Data modal ──────────────────────────────────────────────
-function openDataModal() {
-  document.getElementById('data-modal').classList.add('open');
-}
-function closeDataModal(e) {
-  if (!e || e.target === document.getElementById('data-modal')) {
-    document.getElementById('data-modal').classList.remove('open');
-  }
-}
-function closeBeanModal(e) {
-  if (!e || e.target === document.getElementById('bean-modal')) {
-    document.getElementById('bean-modal').classList.remove('open');
-  }
-}
-
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `espresso-dial-in-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  closeDataModal();
-}
-
-function importData() {
-  document.getElementById('import-file').click();
-}
-
-function handleImport(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const imported = JSON.parse(ev.target.result);
-      if (imported.shots && imported.beans) {
-        Object.assign(state, imported);
-        save();
-        renderAll();
-        alert('Import successful!');
-      } else {
-        alert('Invalid data file.');
+      function defaultState() {
+        return {
+          schemaVersion: SCHEMA_VERSION,
+          appName: CACHEABLE_APP_NAME,
+          beans: [],
+          activeBeanId: null,
+          selectedPortafilterId: PORTAFILTERS[0].id,
+          shots: [],
+          lastRecommendation: null,
+          ui: { activeTab: "dialTab" },
+          updatedAt: new Date().toISOString()
+        };
       }
-    } catch { alert('Failed to parse JSON.'); }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-  closeDataModal();
-}
 
-function clearAllData() {
-  if (!confirm('Delete ALL shots and beans? This cannot be undone.')) return;
-  state = { shots: [], beans: [], activeBeanId: null, bayesian: { slopeMean:-2.5, slopeVar:1.5, doseSlopeMean:1.8, doseSlopeVar:0.5 } };
-  save();
-  renderAll();
-  closeDataModal();
-}
+      function uid(prefix) {
+        return prefix + "_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      }
 
-// ─── Boot ────────────────────────────────────────────────────
-function renderAll() {
-  renderShotList();
-  renderBeanList();
-  updateBeanBadge();
-  updateRatioPill();
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState();
+          const parsed = JSON.parse(raw);
+          if (!isValidState(parsed)) return defaultState();
+          return {
+            ...defaultState(),
+            ...parsed,
+            schemaVersion: SCHEMA_VERSION,
+            beans: Array.isArray(parsed.beans) ? parsed.beans : [],
+            shots: Array.isArray(parsed.shots) ? parsed.shots : [],
+            ui: {
+              ...defaultState().ui,
+              ...(parsed.ui || {})
+            }
+          };
+        } catch (error) {
+          console.warn("Failed to load state", error);
+          return defaultState();
+        }
+      }
 
-  // If there are shots, show last recommendation
-  if (state.shots.length > 0) {
-    const activeBean = state.beans.find(b => b.id === state.activeBeanId) || null;
-    const rec = recommend(state.shots, activeBean);
-    showRecommendation(rec);
-  }
-}
+      function isValidState(value) {
+        return value && typeof value === "object" &&
+          Array.isArray(value.beans) &&
+          Array.isArray(value.shots);
+      }
 
-load();
-renderAll();
+      function saveState() {
+        state.schemaVersion = SCHEMA_VERSION;
+        state.updatedAt = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        showSavedIndicator();
+      }
 
-// Register service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
-</script>
+      function showSavedIndicator() {
+        clearTimeout(saveIndicatorTimer);
+        els.savedIndicator.classList.add("visible");
+        saveIndicatorTimer = setTimeout(function () {
+          els.savedIndicator.classList.remove("visible");
+        }, 1400);
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function round(value, digits) {
+        const factor = Math.pow(10, digits);
+        return Math.round(value * factor) / factor;
+      }
+
+      function safeNumber(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function getMicroIndex(letter) {
+        return MICRO_STEPS.indexOf(letter);
+      }
+
+      function formatGrindFloat(macro, microIndex) {
+        return round(Number(macro) + microIndex / 9, 3);
+      }
+
+      function grindFloatToSetting(value) {
+        const clamped = clamp(value, 1, 31 + 8 / 9);
+        let macro = Math.floor(clamped);
+        let microIndex = Math.round((clamped - macro) * 9);
+        if (microIndex > 8) {
+          macro += 1;
+          microIndex = 0;
+        }
+        macro = clamp(macro, 1, 31);
+        microIndex = clamp(microIndex, 0, 8);
+        return {
+          macro,
+          microIndex,
+          micro: MICRO_STEPS[microIndex],
+          grindFloat: round(macro + microIndex / 9, 3)
+        };
+      }
+
+      function getActiveBean() {
+        return state.beans.find(function (bean) { return bean.id === state.activeBeanId; }) || null;
+      }
+
+      function getSelectedPortafilter() {
+        return PORTAFILTERS.find(function (item) {
+          return item.id === state.selectedPortafilterId;
+        }) || PORTAFILTERS[0];
+      }
+
+      function getTargetDose() {
+        return getSelectedPortafilter().dose;
+      }
+
+      function getTargetYield() {
+        return getSelectedPortafilter().yield;
+      }
+
+      function formatTargetRecipe(includeShotTime) {
+        const portafilter = getSelectedPortafilter();
+        const recipe = portafilter.dose + "g in → " + portafilter.yield + "g out";
+        return includeShotTime ? recipe + " in 25-35s" : recipe;
+      }
+
+      function getBeanOffset(bean) {
+        if (!bean) return 0;
+        return ROAST_OFFSETS[bean.roastLevel] || 0;
+      }
+
+      function posteriorForSlope(observations, prior) {
+        if (!observations.length) {
+          return {
+            mean: prior.mean,
+            variance: prior.variance,
+            precision: 1 / prior.variance
+          };
+        }
+        let sumXX = 0;
+        let sumXY = 0;
+        observations.forEach(function (item) {
+          sumXX += item.x * item.x;
+          sumXY += item.x * item.y;
+        });
+        const priorPrecision = 1 / prior.variance;
+        const noisePrecision = 1 / prior.noiseVariance;
+        const posteriorPrecision = priorPrecision + noisePrecision * sumXX;
+        const posteriorVariance = 1 / posteriorPrecision;
+        const posteriorMean = posteriorVariance * (priorPrecision * prior.mean + noisePrecision * sumXY);
+        return {
+          mean: posteriorMean,
+          variance: posteriorVariance,
+          precision: posteriorPrecision
+        };
+      }
+
+      function getShotPosterior() {
+        return posteriorForSlope(
+          state.shots.map(function (shot) {
+            return { x: shot.grindFloat, y: shot.shotTimeSec };
+          }),
+          SHOT_PRIOR
+        );
+      }
+
+      function getDosePosterior() {
+        return posteriorForSlope(
+          state.shots.map(function (shot) {
+            return { x: shot.grindTimeSec, y: shot.doseG };
+          }),
+          DOSE_PRIOR
+        );
+      }
+
+      function getConfidence(shotPosterior, dosePosterior) {
+        const shotProgress = clamp((SHOT_PRIOR.variance - shotPosterior.variance) / SHOT_PRIOR.variance, 0, 1);
+        const doseProgress = clamp((DOSE_PRIOR.variance - dosePosterior.variance) / DOSE_PRIOR.variance, 0, 1);
+        const countProgress = clamp(state.shots.length / 6, 0, 1);
+        const combined = round((shotProgress * 0.45 + doseProgress * 0.25 + countProgress * 0.3) * 100, 0);
+        let badge = "Learning";
+        if (state.shots.length < 3) badge = "Exploring";
+        else if (state.shots.length >= 6 && combined >= 68) badge = "Confident";
+        return { percent: combined, badge: badge };
+      }
+
+      function makeRecommendation(baseShot) {
+        const shotPosterior = getShotPosterior();
+        const dosePosterior = getDosePosterior();
+        const activeBean = getActiveBean();
+        const beanOffset = getBeanOffset(activeBean);
+        const slope = shotPosterior.mean >= -0.1 ? -0.1 : shotPosterior.mean;
+        const shotDelta = TARGET_SHOT_TIME - baseShot.shotTimeSec;
+        const recommendedGrindFloatRaw = baseShot.grindFloat + shotDelta / slope + beanOffset;
+        const recommendedSetting = grindFloatToSetting(recommendedGrindFloatRaw);
+        const doseSlope = dosePosterior.mean <= 0.1 ? 0.1 : dosePosterior.mean;
+        const recommendedGrindTimeSec = clamp(getTargetDose() / doseSlope, MIN_GRIND_TIME, MAX_GRIND_TIME);
+        const confidence = getConfidence(shotPosterior, dosePosterior);
+        return {
+          macro: recommendedSetting.macro,
+          micro: recommendedSetting.micro,
+          microIndex: recommendedSetting.microIndex,
+          grindFloat: recommendedSetting.grindFloat,
+          recommendedGrindTimeSec: round(recommendedGrindTimeSec, 1),
+          targetShotTimeSec: TARGET_SHOT_TIME,
+          confidence: confidence.percent,
+          badge: confidence.badge,
+          basedOnShotId: baseShot.id,
+          beanOffset: beanOffset,
+          portafilterId: getSelectedPortafilter().id,
+          targetDoseG: getTargetDose(),
+          targetYieldG: getTargetYield(),
+          posteriors: {
+            shotMean: round(shotPosterior.mean, 3),
+            shotVariance: round(shotPosterior.variance, 3),
+            doseMean: round(dosePosterior.mean, 3),
+            doseVariance: round(dosePosterior.variance, 3)
+          }
+        };
+      }
+
+      function fillMicroSelect() {
+        els.microInput.innerHTML = MICRO_STEPS.map(function (step) {
+          return '<option value="' + step + '"' + (step === "E" ? " selected" : "") + ">" + step + "</option>";
+        }).join("");
+      }
+
+      function fillPortafilterSelect() {
+        els.portafilterInput.innerHTML = PORTAFILTERS.map(function (item) {
+          const isSelected = item.id === getSelectedPortafilter().id ? " selected" : "";
+          return '<option value="' + item.id + '"' + isSelected + ">" +
+            escapeHtml(item.label + " • " + item.dose + "g in / " + item.yield + "g out") +
+            "</option>";
+        }).join("");
+      }
+
+      function syncDoseYieldToPortafilter() {
+        els.doseInput.value = getTargetDose().toFixed(1);
+        els.yieldInput.value = getTargetYield().toFixed(1);
+      }
+
+      function updateDerivedPills() {
+        const macro = clamp(safeNumber(els.macroInput.value) || 1, 1, 31);
+        const microIndex = Math.max(0, getMicroIndex(els.microInput.value));
+        const dose = safeNumber(els.doseInput.value) || 0;
+        const yieldWeight = safeNumber(els.yieldInput.value) || 0;
+        const ratio = dose > 0 ? yieldWeight / dose : 0;
+        const grindFloat = formatGrindFloat(macro, microIndex);
+        els.grindFloatPill.textContent = "Grind " + grindFloat.toFixed(3) + " (" + macro + els.microInput.value + ")";
+        els.ratioPill.textContent = "Ratio " + ratio.toFixed(2);
+        els.ratioPill.classList.toggle("good", ratio >= TARGET_RATIO_MIN && ratio <= TARGET_RATIO_MAX);
+        els.ratioPill.classList.toggle("bad", ratio < TARGET_RATIO_MIN || ratio > TARGET_RATIO_MAX);
+        els.targetRecipeValue.textContent = formatTargetRecipe(false);
+        els.targetPill.textContent = "Target " + formatTargetRecipe(true);
+        els.equipmentTargetRecipe.textContent = formatTargetRecipe(true);
+      }
+
+      function renderActiveBean() {
+        const bean = getActiveBean();
+        const offset = getBeanOffset(bean);
+        els.activeBeanOffset.textContent = "Offset " + (offset > 0 ? "+" + offset : offset);
+        if (!bean) {
+          els.activeBeanTitle.textContent = "No bean selected";
+          els.activeBeanBanner.innerHTML = "<strong>Choose a bean in the Beans tab.</strong><span class=\"muted\">Roast level shifts the grinder prior before each recommendation.</span>";
+          return;
+        }
+        els.activeBeanTitle.textContent = bean.name;
+        els.activeBeanBanner.innerHTML =
+          "<strong>" + escapeHtml(bean.roaster || "Unknown roaster") + "</strong>" +
+          "<span class=\"muted\">" + escapeHtml(capitalize(bean.roastLevel)) + " roast • " + escapeHtml(bean.processingMethod || "Processing not set") + "</span>";
+      }
+
+      function renderRecommendation() {
+        const recommendation = state.lastRecommendation;
+        const shotPosterior = getShotPosterior();
+        const dosePosterior = getDosePosterior();
+        const confidence = getConfidence(shotPosterior, dosePosterior);
+        const recommendationDose = recommendation ? (recommendation.targetDoseG || getTargetDose()) : getTargetDose();
+        const recommendationYield = recommendation ? (recommendation.targetYieldG || getTargetYield()) : getTargetYield();
+        els.badgePill.textContent = confidence.badge;
+        if (!recommendation) {
+          els.recommendationBody.className = "empty-state";
+          els.recommendationBody.textContent = "Log your first shot to generate a grinder and grind-time recommendation.";
+          return;
+        }
+        els.recommendationBody.className = "";
+        els.recommendationBody.innerHTML = [
+          '<div class="recommendation-grid">',
+          metricHtml("Recommended grinder", recommendation.macro + recommendation.micro),
+          metricHtml("Grind float", recommendation.grindFloat.toFixed(3)),
+          metricHtml("Recommended grind time", recommendation.recommendedGrindTimeSec.toFixed(1) + "s"),
+          metricHtml("Target shot time", recommendation.targetShotTimeSec.toFixed(0) + "s"),
+          "</div>",
+          '<div class="confidence">',
+          '<div class="pill-row">',
+          '<div class="pill">Basket target ' + recommendationDose + "g/" + recommendationYield + "g</div>",
+          '<div class="pill">Posterior slope ' + recommendation.posteriors.shotMean.toFixed(3) + "s/step</div>",
+          '<div class="pill">Dose slope ' + recommendation.posteriors.doseMean.toFixed(3) + "g/s</div>",
+          '<div class="pill">Bean offset ' + (recommendation.beanOffset > 0 ? "+" + recommendation.beanOffset : recommendation.beanOffset) + "</div>",
+          "</div>",
+          '<div class="metric">',
+          '<div class="metric-label">Confidence</div>',
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">',
+          '<div class="metric-value">' + recommendation.badge + "</div>",
+          '<div class="number">' + recommendation.confidence.toFixed(0) + "%</div>",
+          "</div>",
+          '<div class="bar" aria-label="Confidence bar"><div class="bar-fill" style="width:' + recommendation.confidence + '%;"></div></div>',
+          "</div>",
+          "</div>"
+        ].join("");
+      }
+
+      function metricHtml(label, value) {
+        return '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value number">' + escapeHtml(value) + "</div></div>";
+      }
+
+      function renderRecentShots() {
+        const shots = state.shots.slice(-6).reverse();
+        if (!shots.length) {
+          els.recentShots.innerHTML = '<div class="empty-state">No shots logged yet.</div>';
+          return;
+        }
+        els.recentShots.innerHTML = shots.map(function (shot) {
+          const bean = state.beans.find(function (item) { return item.id === shot.beanId; });
+          return [
+            '<div class="shot-item">',
+            '<div class="shot-head">',
+            '<div>',
+            '<strong class="number">' + shot.macro + shot.micro + "</strong>",
+            '<div class="muted number">' + shot.grindFloat.toFixed(3) + " grind float</div>",
+            "</div>",
+            '<div class="tag">' + (bean ? escapeHtml(bean.name) : "No bean") + "</div>",
+            "</div>",
+            '<div class="shot-meta">',
+            '<span class="tag number">' + shot.shotTimeSec.toFixed(1) + "s shot</span>",
+            '<span class="tag number">' + shot.doseG.toFixed(1) + "g in</span>",
+            '<span class="tag number">' + shot.yieldG.toFixed(1) + "g out</span>",
+            '<span class="tag number">ratio ' + shot.ratio.toFixed(2) + "</span>",
+            "</div>",
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderBeans() {
+        if (!state.beans.length) {
+          els.beanList.innerHTML = '<div class="empty-state">Create your first bean to start tracking roast-based offsets.</div>';
+          return;
+        }
+        els.beanList.innerHTML = state.beans.map(function (bean) {
+          const isActive = bean.id === state.activeBeanId;
+          return [
+            '<div class="bean-item">',
+            '<div class="bean-head">',
+            '<div>',
+            '<strong>' + escapeHtml(bean.name) + '</strong>',
+            '<div class="muted">' + escapeHtml(bean.roaster || "Unknown roaster") + "</div>",
+            "</div>",
+            '<div class="bean-actions">',
+            '<button class="mini-button" type="button" data-set-active="' + bean.id + '">' + (isActive ? "Active" : "Set Active") + "</button>",
+            '<button class="mini-button" type="button" data-edit-bean="' + bean.id + '">Edit</button>',
+            '<button class="mini-button" type="button" data-delete-bean="' + bean.id + '">Delete</button>',
+            "</div>",
+            "</div>",
+            '<div class="bean-meta">',
+            '<span class="tag">' + escapeHtml(capitalize(bean.roastLevel)) + "</span>",
+            '<span class="tag">' + escapeHtml(bean.processingMethod || "Process unset") + "</span>",
+            '<span class="tag">Offset ' + (getBeanOffset(bean) > 0 ? "+" + getBeanOffset(bean) : getBeanOffset(bean)) + "</span>",
+            "</div>",
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderStats() {
+        const shotPosterior = getShotPosterior();
+        const dosePosterior = getDosePosterior();
+        const confidence = getConfidence(shotPosterior, dosePosterior);
+        const activeBean = getActiveBean();
+        const selectedPortafilter = getSelectedPortafilter();
+        const averageShotTime = state.shots.length ? state.shots.reduce(function (sum, shot) { return sum + shot.shotTimeSec; }, 0) / state.shots.length : 0;
+        const averageRatio = state.shots.length ? state.shots.reduce(function (sum, shot) { return sum + shot.ratio; }, 0) / state.shots.length : 0;
+        const recommendation = state.lastRecommendation;
+        const stats = [
+          { label: "Shots logged", value: String(state.shots.length) },
+          { label: "Average shot time", value: state.shots.length ? round(averageShotTime, 1).toFixed(1) + "s" : "—" },
+          { label: "Average ratio", value: state.shots.length ? round(averageRatio, 2).toFixed(2) : "—" },
+          { label: "Confidence", value: confidence.badge + " • " + confidence.percent + "%" },
+          { label: "Selected basket", value: selectedPortafilter.basketLabel + " • " + selectedPortafilter.dose + "g" },
+          { label: "Active bean", value: activeBean ? activeBean.name : "None selected" },
+          { label: "Current recommendation", value: recommendation ? recommendation.macro + recommendation.micro + " • " + recommendation.recommendedGrindTimeSec.toFixed(1) + "s grind" : "Awaiting first shot" },
+          { label: "Shot slope posterior", value: round(shotPosterior.mean, 3).toFixed(3) + " s/step" },
+          { label: "Dose slope posterior", value: round(dosePosterior.mean, 3).toFixed(3) + " g/s" }
+        ];
+        els.statsGrid.innerHTML = stats.map(function (stat) {
+          return '<div class="metric"><div class="metric-label">' + escapeHtml(stat.label) + '</div><div class="metric-value">' + escapeHtml(stat.value) + "</div></div>";
+        }).join("");
+      }
+
+      function renderAll() {
+        updateDerivedPills();
+        renderActiveBean();
+        renderRecommendation();
+        renderRecentShots();
+        renderBeans();
+        renderStats();
+        applyActiveTab(state.ui.activeTab || "dialTab");
+      }
+
+      function applyActiveTab(tabId) {
+        els.screens.forEach(function (screen) {
+          screen.classList.toggle("active", screen.id === tabId);
+        });
+        els.tabs.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.tab === tabId);
+        });
+      }
+
+      function capitalize(value) {
+        if (!value) return "";
+        return value.split("-").map(function (part) {
+          return part.charAt(0).toUpperCase() + part.slice(1);
+        }).join("-");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function resetBeanForm() {
+        editingBeanId = null;
+        els.beanNameInput.value = "";
+        els.beanRoasterInput.value = "";
+        els.beanRoastInput.value = "medium";
+        els.beanProcessInput.value = "";
+        els.saveBeanButton.textContent = "Save Bean";
+        els.cancelEditBeanButton.hidden = true;
+      }
+
+      function populateBeanForm(bean) {
+        editingBeanId = bean.id;
+        els.beanNameInput.value = bean.name;
+        els.beanRoasterInput.value = bean.roaster || "";
+        els.beanRoastInput.value = bean.roastLevel;
+        els.beanProcessInput.value = bean.processingMethod || "";
+        els.saveBeanButton.textContent = "Update Bean";
+        els.cancelEditBeanButton.hidden = false;
+      }
+
+      function handleSaveBean() {
+        const name = els.beanNameInput.value.trim();
+        const roaster = els.beanRoasterInput.value.trim();
+        const roastLevel = els.beanRoastInput.value;
+        const processingMethod = els.beanProcessInput.value.trim();
+        if (!name) {
+          window.alert("Bean name is required.");
+          return;
+        }
+        const existing = editingBeanId ? state.beans.find(function (bean) { return bean.id === editingBeanId; }) : null;
+        const bean = {
+          id: existing ? existing.id : uid("bean"),
+          name: name,
+          roaster: roaster,
+          roastLevel: roastLevel,
+          processingMethod: processingMethod,
+          createdAt: existing ? existing.createdAt : new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        if (existing) {
+          state.beans = state.beans.map(function (item) { return item.id === bean.id ? bean : item; });
+        } else {
+          state.beans.unshift(bean);
+        }
+        if (!state.activeBeanId) state.activeBeanId = bean.id;
+        saveState();
+        resetBeanForm();
+        renderAll();
+      }
+
+      function handleBeanListClick(event) {
+        const setActiveId = event.target.getAttribute("data-set-active");
+        const editId = event.target.getAttribute("data-edit-bean");
+        const deleteId = event.target.getAttribute("data-delete-bean");
+
+        if (setActiveId) {
+          state.activeBeanId = setActiveId;
+          saveState();
+          renderAll();
+          return;
+        }
+
+        if (editId) {
+          const bean = state.beans.find(function (item) { return item.id === editId; });
+          if (bean) populateBeanForm(bean);
+          return;
+        }
+
+        if (deleteId) {
+          const bean = state.beans.find(function (item) { return item.id === deleteId; });
+          if (!bean) return;
+          if (!window.confirm('Delete "' + bean.name + '"? Existing shot history will keep its stored bean id.')) return;
+          state.beans = state.beans.filter(function (item) { return item.id !== deleteId; });
+          if (state.activeBeanId === deleteId) state.activeBeanId = state.beans[0] ? state.beans[0].id : null;
+          if (editingBeanId === deleteId) resetBeanForm();
+          saveState();
+          renderAll();
+        }
+      }
+
+      function handleLogShot() {
+        const macro = clamp(Math.round(safeNumber(els.macroInput.value) || 0), 1, 31);
+        const micro = els.microInput.value;
+        const microIndex = getMicroIndex(micro);
+        const grindTimeSec = safeNumber(els.grindTimeInput.value);
+        const doseG = safeNumber(els.doseInput.value);
+        const shotTimeSec = safeNumber(els.shotTimeInput.value);
+        const yieldG = safeNumber(els.yieldInput.value);
+
+        if (microIndex < 0 || !grindTimeSec || !doseG || !shotTimeSec || !yieldG) {
+          window.alert("Enter valid shot values before logging.");
+          return;
+        }
+
+        const shot = {
+          id: uid("shot"),
+          beanId: state.activeBeanId,
+          portafilterId: getSelectedPortafilter().id,
+          macro: macro,
+          micro: micro,
+          microIndex: microIndex,
+          grindFloat: formatGrindFloat(macro, microIndex),
+          grindTimeSec: grindTimeSec,
+          doseG: doseG,
+          shotTimeSec: shotTimeSec,
+          yieldG: yieldG,
+          ratio: yieldG / doseG,
+          createdAt: new Date().toISOString()
+        };
+
+        state.shots.push(shot);
+        state.lastRecommendation = makeRecommendation(shot);
+        state.ui.activeTab = "dialTab";
+
+        const recommended = state.lastRecommendation;
+        els.macroInput.value = String(recommended.macro);
+        els.microInput.value = recommended.micro;
+        els.grindTimeInput.value = recommended.recommendedGrindTimeSec.toFixed(1);
+        syncDoseYieldToPortafilter();
+        saveState();
+        renderAll();
+      }
+
+      function handlePortafilterChange() {
+        state.selectedPortafilterId = els.portafilterInput.value;
+        syncDoseYieldToPortafilter();
+        if (state.lastRecommendation) {
+          const baseShot = state.shots.find(function (shot) {
+            return shot.id === state.lastRecommendation.basedOnShotId;
+          }) || state.shots[state.shots.length - 1];
+          if (baseShot) state.lastRecommendation = makeRecommendation(baseShot);
+        }
+        saveState();
+        renderAll();
+      }
+
+      function exportData() {
+        els.dataTextarea.value = JSON.stringify(state, null, 2);
+      }
+
+      function importData() {
+        try {
+          const parsed = JSON.parse(els.dataTextarea.value);
+          if (!isValidState(parsed)) throw new Error("Invalid state shape");
+          const nextState = {
+            ...defaultState(),
+            ...parsed,
+            schemaVersion: SCHEMA_VERSION,
+            beans: Array.isArray(parsed.beans) ? parsed.beans : [],
+            shots: Array.isArray(parsed.shots) ? parsed.shots : []
+          };
+          Object.keys(state).forEach(function (key) { delete state[key]; });
+          Object.assign(state, nextState);
+          saveState();
+          resetBeanForm();
+          renderAll();
+          window.alert("Import complete.");
+        } catch (error) {
+          window.alert("Import failed: " + error.message);
+        }
+      }
+
+      function clearData() {
+        if (!window.confirm("Clear all saved beans, shots, and recommendations?")) return;
+        localStorage.removeItem(STORAGE_KEY);
+        const nextDefault = defaultState();
+        Object.keys(state).forEach(function (key) { delete state[key]; });
+        Object.assign(state, nextDefault);
+        resetBeanForm();
+        saveState();
+        renderAll();
+      }
+
+      function attachEvents() {
+        [els.macroInput, els.microInput, els.doseInput, els.yieldInput].forEach(function (input) {
+          input.addEventListener("input", updateDerivedPills);
+        });
+        els.portafilterInput.addEventListener("change", handlePortafilterChange);
+        els.logShotButton.addEventListener("click", handleLogShot);
+        els.saveBeanButton.addEventListener("click", handleSaveBean);
+        els.cancelEditBeanButton.addEventListener("click", resetBeanForm);
+        els.beanList.addEventListener("click", handleBeanListClick);
+
+        els.tabs.forEach(function (button) {
+          button.addEventListener("click", function () {
+            state.ui.activeTab = button.dataset.tab;
+            saveState();
+            applyActiveTab(state.ui.activeTab);
+          });
+        });
+
+        els.dataButton.addEventListener("click", function () {
+          exportData();
+          els.dataModal.showModal();
+        });
+        els.closeDataModalButton.addEventListener("click", function () {
+          els.dataModal.close();
+        });
+        els.exportButton.addEventListener("click", exportData);
+        els.importButton.addEventListener("click", importData);
+        els.clearButton.addEventListener("click", clearData);
+      }
+
+      fillMicroSelect();
+      fillPortafilterSelect();
+      syncDoseYieldToPortafilter();
+      attachEvents();
+      renderAll();
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./sw.js").catch(function (error) {
+            console.warn("Service worker registration failed", error);
+          });
+        });
+      }
+    }());
+  </script>
 </body>
 </html>
