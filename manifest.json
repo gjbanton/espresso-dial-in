@@ -1,24 +1,22 @@
 {
   "name": "Espresso Dial-In",
-  "short_name": "DialIn",
-  "description": "Calibrate your Baratza Sette 270 + Profitec MOVE espresso setup",
+  "short_name": "Dial-In",
+  "description": "Calibrate espresso shots for a Baratza Sette 270 and Profitec MOVE.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#1a1a1a",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
