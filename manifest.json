@@ -1,14 +1,24 @@
 {
-  "name": "Espresso Dial-In Lab",
-  "short_name": "Dial-In Lab",
-  "description": "Bayesian espresso dial-in tool for Baratza Sette 270 + Profitec MOVE",
-  "start_url": "./index.html",
+  "name": "Espresso Dial-In",
+  "short_name": "DialIn",
+  "description": "Calibrate your Baratza Sette 270 + Profitec MOVE espresso setup",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#1a1a1a",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "icons": [
-    {"src": "icon-192.png","sizes": "192x192","type": "image/png","purpose": "any maskable"},
-    {"src": "icon-512.png","sizes": "512x512","type": "image/png","purpose": "any maskable"}
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
