@@ -1,0 +1,2007 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Espresso Dial-In</title>
+  <meta name="theme-color" content="#1a1a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Espresso Dial-In">
+  <meta name="description" content="Dial in espresso shots for a Baratza Sette 270 and Profitec MOVE.">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+  <style>
+    :root {
+      --bg: #201f1d;
+      --bg-soft: #262421;
+      --bg-elevated: #2b2926;
+      --card: rgba(30, 29, 27, 0.9);
+      --line: rgba(244, 237, 224, 0.18);
+      --line-strong: rgba(244, 237, 224, 0.38);
+      --text: #f4ede0;
+      --muted: #d6ccbe;
+      --chalk: #f7f1e7;
+      --accent: #8f6a47;
+      --accent-strong: #bb946c;
+      --success: #cfe5c9;
+      --danger: #e7c4c0;
+      --shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+      --radius: 22px;
+      --mono: "Avenir Next Condensed", "SFMono-Regular", "Menlo", monospace;
+      --sans: "Chalkboard SE", "Marker Felt", "Noteworthy", "Trebuchet MS", sans-serif;
+      --sans-alt: "Chalkboard SE", "Noteworthy", "Arial Rounded MT Bold", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 22%),
+        radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.03), transparent 18%),
+        linear-gradient(180deg, #2b2a27 0%, #1f1e1c 24%, #171715 100%);
+      color: var(--text);
+      font-family: var(--sans);
+      background-attachment: fixed;
+    }
+
+    body {
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.16) 0 1px, transparent 1px),
+        radial-gradient(circle at 80% 35%, rgba(255,255,255,0.12) 0 1px, transparent 1px),
+        radial-gradient(circle at 40% 70%, rgba(255,255,255,0.12) 0 1px, transparent 1px);
+      background-size: 180px 180px, 230px 230px, 260px 260px;
+      mix-blend-mode: screen;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding-bottom: calc(108px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(10px);
+      background: rgba(26, 25, 23, 0.92);
+      border-bottom: 1px dashed var(--line);
+      padding: 14px 16px 12px;
+    }
+
+    .topbar-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: clamp(1.65rem, 6vw, 2.35rem);
+      line-height: 0.95;
+      letter-spacing: 0.03em;
+      font-family: var(--sans-alt);
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .saved-indicator {
+      min-width: 62px;
+      text-align: right;
+      color: var(--accent-strong);
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+
+    .saved-indicator.visible {
+      opacity: 1;
+    }
+
+    .ghost-button,
+    .action-button,
+    .danger-button,
+    .tab-button,
+    .mini-button,
+    .basket-button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+    }
+
+    .ghost-button:active,
+    .action-button:active,
+    .danger-button:active,
+    .tab-button:active,
+    .mini-button:active,
+    .basket-button:active {
+      transform: scale(0.98);
+    }
+
+    .ghost-button {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--chalk);
+      border: 1px dashed var(--line-strong);
+    }
+
+    .content {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .screen {
+      display: none;
+      gap: 16px;
+    }
+
+    .screen.active {
+      display: grid;
+    }
+
+    .card {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.008)),
+        var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 12px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      opacity: 0.7;
+    }
+
+    .card h2,
+    .card h3,
+    .card h4,
+    .card p {
+      margin-top: 0;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      font-size: 0.72rem;
+      font-family: var(--sans-alt);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .banner {
+      display: grid;
+      gap: 6px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+    }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .grid-3 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field label {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 14px 14px;
+      min-height: 48px;
+      outline: none;
+      font-family: var(--sans);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(244, 237, 224, 0.5);
+      box-shadow: 0 0 0 3px rgba(244, 237, 224, 0.08);
+    }
+
+    .number {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .basket-selector {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .basket-button {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      padding: 14px 8px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      color: var(--chalk);
+      text-align: center;
+    }
+
+    .basket-button.active {
+      background: rgba(143, 106, 71, 0.18);
+      border-style: solid;
+      border-color: rgba(187, 148, 108, 0.64);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .basket-icon {
+      width: 54px;
+      height: 34px;
+      display: block;
+    }
+
+    .basket-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .basket-dose {
+      font-size: 1rem;
+      font-family: var(--mono);
+      color: var(--chalk);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      max-width: 100%;
+      white-space: normal;
+    }
+
+    .pill.good {
+      color: var(--success);
+      background: rgba(129, 150, 118, 0.12);
+      border-color: rgba(207, 229, 201, 0.34);
+    }
+
+    .pill.bad {
+      color: var(--danger);
+      background: rgba(156, 108, 104, 0.16);
+      border-color: rgba(231, 196, 192, 0.34);
+    }
+
+    .action-button,
+    .danger-button,
+    .mini-button {
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-weight: 600;
+      font-family: var(--sans-alt);
+    }
+
+    .action-button {
+      width: 100%;
+      background: rgba(143, 106, 71, 0.18);
+      color: var(--chalk);
+      border: 1px solid rgba(187, 148, 108, 0.52);
+      box-shadow: none;
+    }
+
+    .danger-button {
+      width: 100%;
+      background: rgba(126, 72, 69, 0.2);
+      color: var(--danger);
+      border: 1px solid rgba(231, 196, 192, 0.28);
+    }
+
+    .mini-button {
+      background: transparent;
+      color: var(--chalk);
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+    }
+
+    .recommendation {
+      display: grid;
+      gap: 12px;
+    }
+
+    .recommendation-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      min-width: 0;
+    }
+
+    .metric-label {
+      font-size: 0.77rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 1rem;
+      font-family: var(--sans);
+      overflow-wrap: anywhere;
+    }
+
+    .metric-value.number {
+      font-family: var(--mono);
+    }
+
+    .confidence {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(143, 106, 71, 0.85), rgba(247, 241, 231, 0.85));
+      width: 0%;
+      transition: width 220ms ease;
+    }
+
+    .bean-list,
+    .shot-list,
+    .equipment-list,
+    .stats-grid,
+    .validation-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bean-item,
+    .shot-item {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px dashed rgba(255, 255, 255, 0.16);
+    }
+
+    .bean-head,
+    .shot-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bean-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .bean-meta,
+    .shot-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .shot-item strong,
+    .bean-item strong {
+      font-size: 1.35rem;
+      font-family: var(--sans-alt);
+      line-height: 1;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(143, 106, 71, 0.14);
+      color: var(--chalk);
+      font-size: 0.76rem;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+    }
+
+    .empty-state {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(23, 23, 21, 0), rgba(23, 23, 21, 0.95) 18%, rgba(23, 23, 21, 0.98));
+      backdrop-filter: blur(12px);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      border-radius: 24px;
+      background: rgba(31, 30, 28, 0.95);
+      border: 1px dashed var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .tab-button {
+      padding: 12px 8px;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 600;
+      font-family: var(--sans-alt);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 0.78rem;
+    }
+
+    .tab-button.active {
+      color: var(--chalk);
+      background: rgba(143, 106, 71, 0.2);
+      border: 1px solid rgba(187, 148, 108, 0.44);
+    }
+
+    dialog {
+      width: min(92vw, 520px);
+      border: 1px dashed var(--line-strong);
+      border-radius: 24px;
+      padding: 0;
+      background: #242320;
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-body {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+    }
+
+    .helper {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .validation-item {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px dashed rgba(255, 255, 255, 0.16);
+    }
+
+    .validation-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .validation-name {
+      font-family: var(--sans-alt);
+      font-size: 1rem;
+    }
+
+    .list-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chalk-line {
+      display: block;
+      width: 100%;
+      height: 10px;
+      margin: 6px 0 12px;
+      background:
+        linear-gradient(90deg, transparent 0, rgba(255,255,255,0.78) 8%, rgba(255,255,255,0.92) 40%, rgba(255,255,255,0.76) 74%, transparent 100%);
+      mask: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+      opacity: 0.18;
+    }
+
+    @media (min-width: 680px) {
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .recommendation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .bean-head,
+      .shot-head {
+        flex-direction: row;
+      }
+    }
+
+    @media (min-width: 720px) {
+      .content {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="title-wrap">
+          <h1>Espresso Dial-In</h1>
+          <div class="subtitle">Baratza Sette 270 × Profitec MOVE</div>
+        </div>
+        <div class="top-actions">
+          <div id="savedIndicator" class="saved-indicator">✓ Saved</div>
+          <button id="dataButton" class="ghost-button" type="button">Data</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section id="dialTab" class="screen active" aria-label="Dial In">
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Portafilter Basket</div>
+              <h2>Choose the basket you are dialing in</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div id="portafilterButtons" class="basket-selector" aria-label="Included basket"></div>
+          <div style="height: 12px;"></div>
+          <div class="grid-2">
+            <div class="metric">
+              <div class="metric-label">Target recipe</div>
+              <div id="targetRecipeValue" class="metric-value">7g in → 14g out</div>
+            </div>
+          </div>
+          <div id="portafilterHelper" class="helper">The selected basket sets the target dose and a 1:2 yield target from the Profitec MOVE manual.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Active Bean</div>
+              <h2 id="activeBeanTitle">No bean selected</h2>
+            </div>
+            <div id="activeBeanOffset" class="tag">Offset 0</div>
+          </div>
+          <div id="activeBeanBanner" class="banner">
+            <strong>Choose a bean in the Beans tab.</strong>
+            <span class="muted">Roast level shifts the grinder prior before each recommendation.</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Shot Log</div>
+              <h2>Dial in the next pull</h2>
+            </div>
+            <div id="badgePill" class="tag">Exploring</div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="macroInput">Macro dial</label>
+              <input id="macroInput" type="number" min="1" max="31" step="1" value="9" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="microInput">Micro dial</label>
+              <select id="microInput"></select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="grindTimeInput">Grind time (sec)</label>
+              <input id="grindTimeInput" type="number" min="0" max="60" step="0.1" value="10" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="doseInput">Dose (g)</label>
+              <input id="doseInput" type="number" min="0" max="30" step="0.1" value="18" inputmode="decimal">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="shotTimeInput">Shot time (sec)</label>
+              <input id="shotTimeInput" type="number" min="0" max="90" step="0.1" value="30" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="yieldInput">Yield (g)</label>
+              <input id="yieldInput" type="number" min="0" max="80" step="0.1" value="36" inputmode="decimal">
+            </div>
+          </div>
+
+          <div class="pill-row">
+            <div id="grindFloatPill" class="pill number">Grind 9.444</div>
+            <div id="ratioPill" class="pill good number">Ratio 2.00</div>
+            <div id="targetPill" class="pill">Target 7g → 14g in 25-35s</div>
+          </div>
+
+          <div style="height: 14px;"></div>
+          <button id="logShotButton" class="action-button" type="button">Log Shot &amp; Get Next Recommendation</button>
+        </article>
+
+        <article class="card recommendation">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Recommendation</div>
+              <h2>Next adjustment</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div id="recommendationBody" class="empty-state">Log your first shot to generate a grinder and grind-time recommendation.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Recent Shots</div>
+              <h2>Learning history</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div id="recentShots" class="shot-list">
+            <div class="empty-state">No shots logged yet.</div>
+          </div>
+        </article>
+      </section>
+
+      <section id="beansTab" class="screen" aria-label="Beans">
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Bean Library</div>
+              <h2>Add or edit beans</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="beanNameInput">Bean name</label>
+              <input id="beanNameInput" type="text" placeholder="Bloom Espresso">
+            </div>
+            <div class="field">
+              <label for="beanRoasterInput">Roaster</label>
+              <input id="beanRoasterInput" type="text" placeholder="Your favorite roaster">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="beanRoastInput">Roast level</label>
+              <select id="beanRoastInput">
+                <option value="light">Light</option>
+                <option value="medium-light">Medium-light</option>
+                <option value="medium" selected>Medium</option>
+                <option value="medium-dark">Medium-dark</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="beanProcessInput">Processing method</label>
+              <input id="beanProcessInput" type="text" placeholder="Washed, natural, honey...">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <button id="saveBeanButton" class="action-button" type="button">Save Bean</button>
+            <button id="cancelEditBeanButton" class="mini-button" type="button" hidden>Cancel Edit</button>
+          </div>
+          <div class="helper">Light roasts bias the prior finer by +2 steps; dark roasts bias it coarser by -2.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Bean List</div>
+              <h2>Active bean drives the prior</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div id="beanList" class="bean-list">
+            <div class="empty-state">Create your first bean to start tracking roast-based offsets.</div>
+          </div>
+        </article>
+      </section>
+
+      <section id="insightsTab" class="screen" aria-label="Insights">
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Bayesian Model</div>
+              <h2>How the app learns</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <p>The grinder model now treats your machine program as a fixed-time shot. It learns how yield changes with grinder setting, then uses yield error to decide direction: low yield means go coarser, high yield means go finer.</p>
+          <p>Dose is adjusted separately through grind time. Recommendation priority is always <span class="number">micro</span> first, then <span class="number">macro</span>, then <span class="number">grind time</span>.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Aggregate Stats</div>
+              <h2>Current picture</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div id="statsGrid" class="stats-grid"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Edge Validation</div>
+              <h2>Barista expectation check</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div id="validationResults" class="validation-list"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-title">
+            <div>
+              <div class="eyebrow">Equipment</div>
+              <h2>Setup reference</h2>
+            </div>
+          </div>
+          <span class="chalk-line" aria-hidden="true"></span>
+          <div class="equipment-list">
+            <div class="metric">
+              <div class="metric-label">Grinder</div>
+              <div class="metric-value">Baratza Sette 270</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Machine</div>
+              <div class="metric-value">Profitec MOVE</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Target recipe</div>
+              <div id="equipmentTargetRecipe" class="metric-value">7g in → 14g out in 25-35s</div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Primary">
+      <div class="tabs">
+        <button class="tab-button active" data-tab="dialTab" type="button">Dial In</button>
+        <button class="tab-button" data-tab="beansTab" type="button">Beans</button>
+        <button class="tab-button" data-tab="insightsTab" type="button">Insights</button>
+      </div>
+    </nav>
+  </div>
+
+  <dialog id="dataModal">
+    <div class="modal-body">
+      <div class="card-title">
+        <div>
+          <div class="eyebrow">Data Tools</div>
+          <h2>Backup and restore</h2>
+        </div>
+        <button id="closeDataModalButton" class="ghost-button" type="button">Close</button>
+      </div>
+      <div class="list-inline">
+        <button id="exportButton" class="mini-button" type="button">Export JSON</button>
+        <button id="importButton" class="mini-button" type="button">Import JSON</button>
+      </div>
+      <div class="field">
+        <label for="dataTextarea">JSON payload</label>
+        <textarea id="dataTextarea" placeholder="Exported app state will appear here. Paste JSON here to import."></textarea>
+      </div>
+      <div class="helper">Import replaces the entire saved app state after validation.</div>
+      <button id="clearButton" class="danger-button" type="button">Clear All Data</button>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "espresso_dial_in_v3";
+      const SCHEMA_VERSION = 3;
+      const CACHEABLE_APP_NAME = "Espresso Dial-In";
+      const MICRO_STEPS = "ABCDEFGHI".split("");
+      const PORTAFILTERS = [
+        { id: "single", label: "Single basket", basketLabel: "1 cup", dose: 7, yield: 14 },
+        { id: "double", label: "Double basket", basketLabel: "2 cups", dose: 14, yield: 28 },
+        { id: "triple", label: "Triple basket", basketLabel: "21 g basket", dose: 21, yield: 42 }
+      ];
+      const ROAST_OFFSETS = {
+        light: 2,
+        "medium-light": 1,
+        medium: 0,
+        "medium-dark": -1,
+        dark: -2
+      };
+      const YIELD_PRIOR = { mean: 3.5, variance: 4.0, noiseVariance: 16.0 };
+      const DOSE_PRIOR = { mean: 1.8, variance: 0.5, noiseVariance: 1.0 };
+      const TARGET_SHOT_TIME = 30;
+      const MIN_TARGET_SHOT_TIME = 25;
+      const MAX_TARGET_SHOT_TIME = 35;
+      const TARGET_RATIO_MIN = 1.8;
+      const TARGET_RATIO_MAX = 2.2;
+      const DOSE_TOLERANCE = 0.3;
+      const YIELD_TOLERANCE = 1.0;
+      const EXPLORING_MAX_MICRO_STEPS = 3;
+      const LEARNING_MAX_MICRO_STEPS = 9;
+      const CONFIDENT_MAX_MICRO_STEPS = 12;
+      const MIN_GRIND_TIME = 4;
+      const MAX_GRIND_TIME = 20;
+
+      const els = {
+        savedIndicator: document.getElementById("savedIndicator"),
+        dataButton: document.getElementById("dataButton"),
+        dataModal: document.getElementById("dataModal"),
+        closeDataModalButton: document.getElementById("closeDataModalButton"),
+        exportButton: document.getElementById("exportButton"),
+        importButton: document.getElementById("importButton"),
+        clearButton: document.getElementById("clearButton"),
+        dataTextarea: document.getElementById("dataTextarea"),
+        portafilterButtons: document.getElementById("portafilterButtons"),
+        targetRecipeValue: document.getElementById("targetRecipeValue"),
+        targetPill: document.getElementById("targetPill"),
+        equipmentTargetRecipe: document.getElementById("equipmentTargetRecipe"),
+        macroInput: document.getElementById("macroInput"),
+        microInput: document.getElementById("microInput"),
+        grindTimeInput: document.getElementById("grindTimeInput"),
+        doseInput: document.getElementById("doseInput"),
+        shotTimeInput: document.getElementById("shotTimeInput"),
+        yieldInput: document.getElementById("yieldInput"),
+        grindFloatPill: document.getElementById("grindFloatPill"),
+        ratioPill: document.getElementById("ratioPill"),
+        logShotButton: document.getElementById("logShotButton"),
+        recommendationBody: document.getElementById("recommendationBody"),
+        badgePill: document.getElementById("badgePill"),
+        recentShots: document.getElementById("recentShots"),
+        activeBeanTitle: document.getElementById("activeBeanTitle"),
+        activeBeanBanner: document.getElementById("activeBeanBanner"),
+        activeBeanOffset: document.getElementById("activeBeanOffset"),
+        beanNameInput: document.getElementById("beanNameInput"),
+        beanRoasterInput: document.getElementById("beanRoasterInput"),
+        beanRoastInput: document.getElementById("beanRoastInput"),
+        beanProcessInput: document.getElementById("beanProcessInput"),
+        saveBeanButton: document.getElementById("saveBeanButton"),
+        cancelEditBeanButton: document.getElementById("cancelEditBeanButton"),
+        beanList: document.getElementById("beanList"),
+        statsGrid: document.getElementById("statsGrid"),
+        validationResults: document.getElementById("validationResults"),
+        tabs: Array.from(document.querySelectorAll(".tab-button")),
+        screens: Array.from(document.querySelectorAll(".screen"))
+      };
+
+      const state = loadState();
+      let editingBeanId = null;
+      let saveIndicatorTimer = null;
+
+      function defaultState() {
+        return {
+          schemaVersion: SCHEMA_VERSION,
+          appName: CACHEABLE_APP_NAME,
+          beans: [],
+          activeBeanId: null,
+          selectedPortafilterId: PORTAFILTERS[0].id,
+          shots: [],
+          lastRecommendation: null,
+          ui: { activeTab: "dialTab" },
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      function uid(prefix) {
+        return prefix + "_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState();
+          const parsed = JSON.parse(raw);
+          if (!isValidState(parsed)) return defaultState();
+          return {
+            ...defaultState(),
+            ...parsed,
+            schemaVersion: SCHEMA_VERSION,
+            beans: Array.isArray(parsed.beans) ? parsed.beans : [],
+            shots: Array.isArray(parsed.shots) ? parsed.shots : [],
+            ui: {
+              ...defaultState().ui,
+              ...(parsed.ui || {})
+            }
+          };
+        } catch (error) {
+          console.warn("Failed to load state", error);
+          return defaultState();
+        }
+      }
+
+      function isValidState(value) {
+        return value && typeof value === "object" &&
+          Array.isArray(value.beans) &&
+          Array.isArray(value.shots);
+      }
+
+      function saveState() {
+        state.schemaVersion = SCHEMA_VERSION;
+        state.updatedAt = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        showSavedIndicator();
+      }
+
+      function showSavedIndicator() {
+        clearTimeout(saveIndicatorTimer);
+        els.savedIndicator.classList.add("visible");
+        saveIndicatorTimer = setTimeout(function () {
+          els.savedIndicator.classList.remove("visible");
+        }, 1400);
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function round(value, digits) {
+        const factor = Math.pow(10, digits);
+        return Math.round(value * factor) / factor;
+      }
+
+      function safeNumber(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function getMicroIndex(letter) {
+        return MICRO_STEPS.indexOf(letter);
+      }
+
+      function formatGrindFloat(macro, microIndex) {
+        return round(Number(macro) + microIndex / 9, 3);
+      }
+
+      function grindFloatToSetting(value) {
+        const clamped = clamp(value, 1, 31 + 8 / 9);
+        let macro = Math.floor(clamped);
+        let microIndex = Math.round((clamped - macro) * 9);
+        if (microIndex > 8) {
+          macro += 1;
+          microIndex = 0;
+        }
+        macro = clamp(macro, 1, 31);
+        microIndex = clamp(microIndex, 0, 8);
+        return {
+          macro,
+          microIndex,
+          micro: MICRO_STEPS[microIndex],
+          grindFloat: round(macro + microIndex / 9, 3)
+        };
+      }
+
+      function getActiveBean() {
+        return state.beans.find(function (bean) { return bean.id === state.activeBeanId; }) || null;
+      }
+
+      function getSelectedPortafilter() {
+        return PORTAFILTERS.find(function (item) {
+          return item.id === state.selectedPortafilterId;
+        }) || PORTAFILTERS[0];
+      }
+
+      function getTargetDose() {
+        return getSelectedPortafilter().dose;
+      }
+
+      function getTargetYield() {
+        return getSelectedPortafilter().yield;
+      }
+
+      function formatTargetRecipe(includeShotTime) {
+        const portafilter = getSelectedPortafilter();
+        const recipe = portafilter.dose + "g in → " + portafilter.yield + "g out";
+        return includeShotTime ? recipe + " in 25-35s" : recipe;
+      }
+
+      function getBeanOffset(bean) {
+        if (!bean) return 0;
+        return ROAST_OFFSETS[bean.roastLevel] || 0;
+      }
+
+      function isShotTimeInRange(shotTimeSec) {
+        return shotTimeSec >= MIN_TARGET_SHOT_TIME && shotTimeSec <= MAX_TARGET_SHOT_TIME;
+      }
+
+      function posteriorForSlope(observations, prior) {
+        if (!observations.length) {
+          return {
+            mean: prior.mean,
+            variance: prior.variance,
+            precision: 1 / prior.variance
+          };
+        }
+        let sumXX = 0;
+        let sumXY = 0;
+        observations.forEach(function (item) {
+          sumXX += item.x * item.x;
+          sumXY += item.x * item.y;
+        });
+        const priorPrecision = 1 / prior.variance;
+        const noisePrecision = 1 / prior.noiseVariance;
+        const posteriorPrecision = priorPrecision + noisePrecision * sumXX;
+        const posteriorVariance = 1 / posteriorPrecision;
+        const posteriorMean = posteriorVariance * (priorPrecision * prior.mean + noisePrecision * sumXY);
+        return {
+          mean: posteriorMean,
+          variance: posteriorVariance,
+          precision: posteriorPrecision
+        };
+      }
+
+      function getYieldLearningShots(shotSet) {
+        return (shotSet || state.shots).filter(function (shot) {
+          return isShotTimeInRange(shot.shotTimeSec);
+        });
+      }
+
+      function getYieldPosterior(shotSet) {
+        return posteriorForSlope(
+          (shotSet || state.shots).map(function (shot) {
+            return shot;
+          }).filter(function (shot) {
+            return isShotTimeInRange(shot.shotTimeSec);
+          }).map(function (shot) {
+            return { x: shot.grindFloat, y: shot.yieldG };
+          }),
+          YIELD_PRIOR
+        );
+      }
+
+      function getDosePosterior(shotSet) {
+        return posteriorForSlope(
+          (shotSet || state.shots).map(function (shot) {
+            return { x: shot.grindTimeSec, y: shot.doseG };
+          }),
+          DOSE_PRIOR
+        );
+      }
+
+      function getConfidence(yieldPosterior, dosePosterior, shotSet) {
+        const shots = shotSet || state.shots;
+        const yieldLearningShots = getYieldLearningShots(shots).length;
+        const yieldProgress = clamp((YIELD_PRIOR.variance - yieldPosterior.variance) / YIELD_PRIOR.variance, 0, 1);
+        const doseProgress = clamp((DOSE_PRIOR.variance - dosePosterior.variance) / DOSE_PRIOR.variance, 0, 1);
+        const countProgress = clamp(Math.max(yieldLearningShots, shots.length) / 6, 0, 1);
+        const combined = round((yieldProgress * 0.45 + doseProgress * 0.25 + countProgress * 0.3) * 100, 0);
+        let badge = "Learning";
+        if (shots.length < 3) badge = "Exploring";
+        else if (shots.length >= 6 && combined >= 68) badge = "Confident";
+        return { percent: combined, badge: badge };
+      }
+
+      function getContradictionInfo(shotSet) {
+        const validShots = getYieldLearningShots(shotSet).slice().sort(function (left, right) {
+          return left.grindFloat - right.grindFloat;
+        });
+        let contradictions = 0;
+        for (let index = 1; index < validShots.length; index += 1) {
+          if (validShots[index].yieldG + 0.01 < validShots[index - 1].yieldG) contradictions += 1;
+        }
+        return {
+          contradictions: contradictions,
+          contradictory: contradictions > 0,
+          validShots: validShots.length
+        };
+      }
+
+      function getMaxAdjustmentMicroSteps(confidenceBadge, contradictionInfo) {
+        let cap = LEARNING_MAX_MICRO_STEPS;
+        if (confidenceBadge === "Exploring") cap = EXPLORING_MAX_MICRO_STEPS;
+        if (confidenceBadge === "Confident") cap = CONFIDENT_MAX_MICRO_STEPS;
+        if (contradictionInfo.contradictory) cap = Math.min(cap, 2);
+        return cap;
+      }
+
+      function applyMicroMacroPriority(macro, microIndex, grindAdjustment) {
+        const currentMicroSteps = (macro - 1) * 9 + microIndex;
+        let adjustmentMicroSteps = Math.round(grindAdjustment * 9);
+        if (adjustmentMicroSteps === 0 && Math.abs(grindAdjustment) > 0) {
+          adjustmentMicroSteps = grindAdjustment > 0 ? 1 : -1;
+        }
+        const nextMicroSteps = clamp(currentMicroSteps + adjustmentMicroSteps, 0, (31 - 1) * 9 + 8);
+        const nextMacro = Math.floor(nextMicroSteps / 9) + 1;
+        const nextMicroIndex = nextMicroSteps % 9;
+        return {
+          macro: nextMacro,
+          microIndex: nextMicroIndex,
+          micro: MICRO_STEPS[nextMicroIndex],
+          grindFloat: round(nextMacro + nextMicroIndex / 9, 3),
+          adjustmentMicroSteps: nextMicroSteps - currentMicroSteps
+        };
+      }
+
+      function makeRecommendation(baseShot, shotSet, options) {
+        const shots = shotSet || state.shots;
+        const config = options || {};
+        const yieldPosterior = getYieldPosterior(shots);
+        const dosePosterior = getDosePosterior(shots);
+        const activeBean = config.activeBean !== undefined ? config.activeBean : getActiveBean();
+        const beanOffset = config.beanOffset !== undefined ? config.beanOffset : getBeanOffset(activeBean);
+        const targetDose = config.targetDose !== undefined ? config.targetDose : getTargetDose();
+        const targetYield = config.targetYield !== undefined ? config.targetYield : getTargetYield();
+        const doseError = round(targetDose - baseShot.doseG, 2);
+        const yieldError = round(targetYield - baseShot.yieldG, 2);
+        const yieldSlope = yieldPosterior.mean <= 0.2 ? 0.2 : yieldPosterior.mean;
+        const confidence = getConfidence(yieldPosterior, dosePosterior, shots);
+        const contradictionInfo = getContradictionInfo(shots);
+        let grinderDirection = "hold";
+        let grinderDriver = "dose-only";
+        let grinderAdjustment = 0;
+        let rawAdjustmentMicroSteps = 0;
+        let conservativeReason = "";
+
+        if (Math.abs(yieldError) > YIELD_TOLERANCE) {
+          grinderDriver = Math.abs(doseError) > DOSE_TOLERANCE ? "yield-and-dose" : "yield-only";
+          grinderDirection = yieldError > 0 ? "coarser" : "finer";
+          grinderAdjustment = yieldError / yieldSlope;
+        } else if (Math.abs(doseError) > DOSE_TOLERANCE) {
+          grinderDirection = "hold";
+          grinderDriver = "dose-only";
+        } else {
+          grinderDriver = "balanced";
+        }
+
+        rawAdjustmentMicroSteps = Math.round(grinderAdjustment * 9);
+        if (rawAdjustmentMicroSteps === 0 && Math.abs(grindAdjustment) > 0) {
+          rawAdjustmentMicroSteps = grinderAdjustment > 0 ? 1 : -1;
+        }
+        const maxAdjustmentMicroSteps = getMaxAdjustmentMicroSteps(confidence.badge, contradictionInfo);
+        const cappedAdjustmentMicroSteps = clamp(rawAdjustmentMicroSteps, -maxAdjustmentMicroSteps, maxAdjustmentMicroSteps);
+        grinderAdjustment = cappedAdjustmentMicroSteps / 9;
+        if (Math.abs(cappedAdjustmentMicroSteps) < Math.abs(rawAdjustmentMicroSteps)) {
+          conservativeReason = contradictionInfo.contradictory
+            ? "Recent shots disagree with each other, so the grinder move is intentionally conservative."
+            : "Shot history is still sparse, so the grinder move is capped to avoid over-correcting.";
+        }
+
+        const baseSetting = {
+          macro: baseShot.macro,
+          microIndex: baseShot.microIndex
+        };
+        const prioritizedSetting = applyMicroMacroPriority(baseSetting.macro, baseSetting.microIndex, grinderAdjustment);
+        const beanAdjustedSetting = grindFloatToSetting(prioritizedSetting.grindFloat + beanOffset);
+        const doseSlope = dosePosterior.mean <= 0.1 ? 0.1 : dosePosterior.mean;
+        let recommendedGrindTimeSec = baseShot.grindTimeSec;
+        if (Math.abs(doseError) > DOSE_TOLERANCE || grinderDriver === "yield-only" || grinderDriver === "yield-and-dose") {
+          recommendedGrindTimeSec = clamp(targetDose / doseSlope, MIN_GRIND_TIME, MAX_GRIND_TIME);
+        }
+        const shotTimeWarning = isShotTimeInRange(baseShot.shotTimeSec)
+          ? ""
+          : "Shot time is outside the 25-35s target window, so this shot is excluded from yield learning.";
+        let explanation = "Dose and yield are both close enough, so hold the grinder setting.";
+        if (grinderDirection === "coarser") {
+          explanation = "Yield was low for the fixed shot program, so go coarser using micro first, then macro if needed.";
+        } else if (grinderDirection === "finer") {
+          explanation = "Yield was high for the fixed shot program, so go finer using micro first, then macro if needed.";
+        } else if (Math.abs(doseError) > DOSE_TOLERANCE) {
+          explanation = "Yield is on target, so keep the grinder setting and use grind time to correct dose.";
+        }
+        if (conservativeReason) explanation += " " + conservativeReason;
+        return {
+          macro: beanAdjustedSetting.macro,
+          micro: beanAdjustedSetting.micro,
+          microIndex: beanAdjustedSetting.microIndex,
+          grindFloat: beanAdjustedSetting.grindFloat,
+          recommendedGrindTimeSec: round(recommendedGrindTimeSec, 1),
+          targetShotTimeSec: TARGET_SHOT_TIME,
+          confidence: confidence.percent,
+          badge: confidence.badge,
+          basedOnShotId: baseShot.id,
+          beanOffset: beanOffset,
+          portafilterId: getSelectedPortafilter().id,
+          targetDoseG: targetDose,
+          targetYieldG: targetYield,
+          yieldError: yieldError,
+          doseError: doseError,
+          grinderDirection: grinderDirection,
+          driver: grinderDriver,
+          explanation: explanation,
+          shotTimeWarning: shotTimeWarning,
+          contradictionDetected: contradictionInfo.contradictory,
+          contradictionCount: contradictionInfo.contradictions,
+          rawAdjustmentMicroSteps: rawAdjustmentMicroSteps,
+          cappedAdjustmentMicroSteps: cappedAdjustmentMicroSteps,
+          conservativeReason: conservativeReason,
+          posteriors: {
+            yieldMean: round(yieldPosterior.mean, 3),
+            yieldVariance: round(yieldPosterior.variance, 3),
+            doseMean: round(dosePosterior.mean, 3),
+            doseVariance: round(dosePosterior.variance, 3)
+          }
+        };
+      }
+
+      function fillMicroSelect() {
+        els.microInput.innerHTML = MICRO_STEPS.map(function (step) {
+          return '<option value="' + step + '"' + (step === "E" ? " selected" : "") + ">" + step + "</option>";
+        }).join("");
+      }
+
+      function basketIconSvg(item) {
+        const beanCount = item.id === "single" ? 1 : item.id === "double" ? 2 : 3;
+        const centers = beanCount === 1 ? [32] : beanCount === 2 ? [22, 42] : [16, 32, 48];
+        const beans = centers.map(function (cx, index) {
+          const tilt = index % 2 === 0 ? "-18" : "18";
+          return [
+            '<g transform="translate(' + cx + ' 20) rotate(' + tilt + ')">',
+            '<ellipse cx="0" cy="0" rx="7.5" ry="12.5" stroke="currentColor" stroke-width="2" fill="none"/>',
+            '<path d="M0 -10 C-2 -5,-2 5,0 10" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
+            '</g>'
+          ].join("");
+        }).join("");
+        return [
+          '<svg class="basket-icon" viewBox="0 0 64 40" aria-hidden="true">',
+          beans,
+          '</svg>'
+        ].join("");
+      }
+
+      function renderPortafilterButtons() {
+        const selected = getSelectedPortafilter().id;
+        els.portafilterButtons.innerHTML = PORTAFILTERS.map(function (item) {
+          const isSelected = item.id === selected;
+          return [
+            '<button class="basket-button' + (isSelected ? ' active' : '') + '" type="button" data-portafilter-id="' + item.id + '" aria-pressed="' + String(isSelected) + '">',
+            basketIconSvg(item),
+            '<span class="basket-dose">' + item.dose + 'g</span>',
+            '<span class="basket-label">' + escapeHtml(item.basketLabel) + '</span>',
+            '</button>'
+          ].join("");
+        }).join("");
+      }
+
+      function syncDoseYieldToPortafilter() {
+        els.doseInput.value = getTargetDose().toFixed(1);
+        els.yieldInput.value = getTargetYield().toFixed(1);
+      }
+
+      function updateDerivedPills() {
+        const macro = clamp(safeNumber(els.macroInput.value) || 1, 1, 31);
+        const microIndex = Math.max(0, getMicroIndex(els.microInput.value));
+        const dose = safeNumber(els.doseInput.value) || 0;
+        const yieldWeight = safeNumber(els.yieldInput.value) || 0;
+        const ratio = dose > 0 ? yieldWeight / dose : 0;
+        const grindFloat = formatGrindFloat(macro, microIndex);
+        els.grindFloatPill.textContent = "Grind " + grindFloat.toFixed(3) + " (" + macro + els.microInput.value + ")";
+        els.ratioPill.textContent = "Ratio " + ratio.toFixed(2);
+        els.ratioPill.classList.toggle("good", ratio >= TARGET_RATIO_MIN && ratio <= TARGET_RATIO_MAX);
+        els.ratioPill.classList.toggle("bad", ratio < TARGET_RATIO_MIN || ratio > TARGET_RATIO_MAX);
+        els.targetRecipeValue.textContent = formatTargetRecipe(false);
+        els.targetPill.textContent = "Target " + formatTargetRecipe(true);
+        els.equipmentTargetRecipe.textContent = formatTargetRecipe(true);
+      }
+
+      function renderActiveBean() {
+        const bean = getActiveBean();
+        const offset = getBeanOffset(bean);
+        els.activeBeanOffset.textContent = "Offset " + (offset > 0 ? "+" + offset : offset);
+        if (!bean) {
+          els.activeBeanTitle.textContent = "No bean selected";
+          els.activeBeanBanner.innerHTML = "<strong>Choose a bean in the Beans tab.</strong><span class=\"muted\">Roast level shifts the grinder prior before each recommendation.</span>";
+          return;
+        }
+        els.activeBeanTitle.textContent = bean.name;
+        els.activeBeanBanner.innerHTML =
+          "<strong>" + escapeHtml(bean.roaster || "Unknown roaster") + "</strong>" +
+          "<span class=\"muted\">" + escapeHtml(capitalize(bean.roastLevel)) + " roast • " + escapeHtml(bean.processingMethod || "Processing not set") + "</span>";
+      }
+
+      function renderRecommendation() {
+        const recommendation = state.lastRecommendation;
+        const yieldPosterior = getYieldPosterior();
+        const dosePosterior = getDosePosterior();
+        const confidence = getConfidence(yieldPosterior, dosePosterior);
+        const recommendationDose = recommendation ? (recommendation.targetDoseG || getTargetDose()) : getTargetDose();
+        const recommendationYield = recommendation ? (recommendation.targetYieldG || getTargetYield()) : getTargetYield();
+        const yieldSlope = recommendation && recommendation.posteriors ? (recommendation.posteriors.yieldMean != null ? recommendation.posteriors.yieldMean : yieldPosterior.mean) : yieldPosterior.mean;
+        const doseSlope = recommendation && recommendation.posteriors ? (recommendation.posteriors.doseMean != null ? recommendation.posteriors.doseMean : dosePosterior.mean) : dosePosterior.mean;
+        const recommendationYieldError = recommendation && recommendation.yieldError != null ? recommendation.yieldError : 0;
+        const recommendationDoseError = recommendation && recommendation.doseError != null ? recommendation.doseError : 0;
+        const recommendationDirection = recommendation && recommendation.grinderDirection ? recommendation.grinderDirection : "hold";
+        els.badgePill.textContent = confidence.badge;
+        if (!recommendation) {
+          els.recommendationBody.className = "empty-state";
+          els.recommendationBody.textContent = "Log your first shot to generate a grinder and grind-time recommendation.";
+          return;
+        }
+        els.recommendationBody.className = "";
+        els.recommendationBody.innerHTML = [
+          '<div class="recommendation-grid">',
+          metricHtml("Recommended grinder", recommendation.macro + recommendation.micro),
+          metricHtml("Grind float", recommendation.grindFloat.toFixed(3)),
+          metricHtml("Recommended grind time", recommendation.recommendedGrindTimeSec.toFixed(1) + "s"),
+          metricHtml("Target shot time", recommendation.targetShotTimeSec.toFixed(0) + "s"),
+          "</div>",
+          '<div class="metric"><div class="metric-label">Why this move</div><div class="metric-value">' + escapeHtml(recommendation.explanation || "Recommendation updated from dose and yield targets.") + "</div></div>",
+          recommendation.shotTimeWarning ? '<div class="pill bad">' + escapeHtml(recommendation.shotTimeWarning) + "</div>" : "",
+          '<div class="confidence">',
+          '<div class="pill-row">',
+          '<div class="pill">Basket target ' + recommendationDose + "g/" + recommendationYield + "g</div>",
+          '<div class="pill">Yield slope ' + yieldSlope.toFixed(3) + "g/step</div>",
+          '<div class="pill">Dose slope ' + doseSlope.toFixed(3) + "g/s</div>",
+          '<div class="pill">Yield error ' + recommendationYieldError.toFixed(1) + "g</div>",
+          '<div class="pill">Dose error ' + recommendationDoseError.toFixed(1) + "g</div>",
+          '<div class="pill">Direction ' + escapeHtml(recommendationDirection) + "</div>",
+          '<div class="pill">Move ' + recommendation.cappedAdjustmentMicroSteps + " micro steps</div>",
+          recommendation.contradictionDetected ? '<div class="pill bad">Contradictory history detected</div>' : "",
+          '<div class="pill">Bean offset ' + (recommendation.beanOffset > 0 ? "+" + recommendation.beanOffset : recommendation.beanOffset) + "</div>",
+          "</div>",
+          '<div class="metric">',
+          '<div class="metric-label">Confidence</div>',
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">',
+          '<div class="metric-value">' + recommendation.badge + "</div>",
+          '<div class="number">' + recommendation.confidence.toFixed(0) + "%</div>",
+          "</div>",
+          '<div class="bar" aria-label="Confidence bar"><div class="bar-fill" style="width:' + recommendation.confidence + '%;"></div></div>',
+          "</div>",
+          "</div>"
+        ].join("");
+      }
+
+      function metricHtml(label, value) {
+        return '<div class="metric"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value number">' + escapeHtml(value) + "</div></div>";
+      }
+
+      function renderRecentShots() {
+        const shots = state.shots.slice(-6).reverse();
+        if (!shots.length) {
+          els.recentShots.innerHTML = '<div class="empty-state">No shots logged yet.</div>';
+          return;
+        }
+        els.recentShots.innerHTML = shots.map(function (shot) {
+          const bean = state.beans.find(function (item) { return item.id === shot.beanId; });
+          return [
+            '<div class="shot-item">',
+            '<div class="shot-head">',
+            '<div>',
+            '<strong class="number">' + shot.macro + shot.micro + "</strong>",
+            '<div class="muted number">' + shot.grindFloat.toFixed(3) + " grind float</div>",
+            "</div>",
+            '<div class="tag">' + (bean ? escapeHtml(bean.name) : "No bean") + "</div>",
+            "</div>",
+            '<div class="shot-meta">',
+            '<span class="tag number">' + shot.grindTimeSec.toFixed(1) + "s grind</span>",
+            '<span class="tag number">' + shot.shotTimeSec.toFixed(1) + "s shot</span>",
+            '<span class="tag number">' + shot.doseG.toFixed(1) + "g in</span>",
+            '<span class="tag number">' + shot.yieldG.toFixed(1) + "g out</span>",
+            '<span class="tag number">ratio ' + shot.ratio.toFixed(2) + "</span>",
+            "</div>",
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderBeans() {
+        if (!state.beans.length) {
+          els.beanList.innerHTML = '<div class="empty-state">Create your first bean to start tracking roast-based offsets.</div>';
+          return;
+        }
+        els.beanList.innerHTML = state.beans.map(function (bean) {
+          const isActive = bean.id === state.activeBeanId;
+          return [
+            '<div class="bean-item">',
+            '<div class="bean-head">',
+            '<div>',
+            '<strong>' + escapeHtml(bean.name) + '</strong>',
+            '<div class="muted">' + escapeHtml(bean.roaster || "Unknown roaster") + "</div>",
+            "</div>",
+            '<div class="bean-actions">',
+            '<button class="mini-button" type="button" data-set-active="' + bean.id + '">' + (isActive ? "Active" : "Set Active") + "</button>",
+            '<button class="mini-button" type="button" data-edit-bean="' + bean.id + '">Edit</button>',
+            '<button class="mini-button" type="button" data-delete-bean="' + bean.id + '">Delete</button>',
+            "</div>",
+            "</div>",
+            '<div class="bean-meta">',
+            '<span class="tag">' + escapeHtml(capitalize(bean.roastLevel)) + "</span>",
+            '<span class="tag">' + escapeHtml(bean.processingMethod || "Process unset") + "</span>",
+            '<span class="tag">Offset ' + (getBeanOffset(bean) > 0 ? "+" + getBeanOffset(bean) : getBeanOffset(bean)) + "</span>",
+            "</div>",
+            "</div>"
+          ].join("");
+        }).join("");
+      }
+
+      function renderStats() {
+        const yieldPosterior = getYieldPosterior();
+        const dosePosterior = getDosePosterior();
+        const confidence = getConfidence(yieldPosterior, dosePosterior);
+        const activeBean = getActiveBean();
+        const selectedPortafilter = getSelectedPortafilter();
+        const averageShotTime = state.shots.length ? state.shots.reduce(function (sum, shot) { return sum + shot.shotTimeSec; }, 0) / state.shots.length : 0;
+        const averageRatio = state.shots.length ? state.shots.reduce(function (sum, shot) { return sum + shot.ratio; }, 0) / state.shots.length : 0;
+        const recommendation = state.lastRecommendation;
+        const stats = [
+          { label: "Shots logged", value: String(state.shots.length) },
+          { label: "Average shot time", value: state.shots.length ? round(averageShotTime, 1).toFixed(1) + "s" : "—" },
+          { label: "Average ratio", value: state.shots.length ? round(averageRatio, 2).toFixed(2) : "—" },
+          { label: "Confidence", value: confidence.badge + " • " + confidence.percent + "%" },
+          { label: "Selected basket", value: selectedPortafilter.basketLabel + " • " + selectedPortafilter.dose + "g" },
+          { label: "Active bean", value: activeBean ? activeBean.name : "None selected" },
+          { label: "Current recommendation", value: recommendation ? recommendation.macro + recommendation.micro + " • " + recommendation.recommendedGrindTimeSec.toFixed(1) + "s grind" : "Awaiting first shot" },
+          { label: "Yield slope posterior", value: round(yieldPosterior.mean, 3).toFixed(3) + " g/step" },
+          { label: "Dose slope posterior", value: round(dosePosterior.mean, 3).toFixed(3) + " g/s" }
+        ];
+        els.statsGrid.innerHTML = stats.map(function (stat) {
+          return '<div class="metric"><div class="metric-label">' + escapeHtml(stat.label) + '</div><div class="metric-value">' + escapeHtml(stat.value) + "</div></div>";
+        }).join("");
+      }
+
+      function buildScenarioShot(macro, micro, grindTimeSec, doseG, shotTimeSec, yieldG) {
+        return {
+          id: uid("scenario"),
+          beanId: null,
+          portafilterId: "triple",
+          macro: macro,
+          micro: micro,
+          microIndex: getMicroIndex(micro),
+          grindFloat: formatGrindFloat(macro, getMicroIndex(micro)),
+          grindTimeSec: grindTimeSec,
+          doseG: doseG,
+          shotTimeSec: shotTimeSec,
+          yieldG: yieldG,
+          ratio: yieldG / doseG,
+          createdAt: new Date().toISOString()
+        };
+      }
+
+      function runEdgeValidation() {
+        const targetDose = 21;
+        const targetYield = 42;
+        const scenarios = [
+          {
+            name: "Low yield, correct dose",
+            shots: [buildScenarioShot(8, "E", 11, 21, 29.5, 34)],
+            evaluate: function (recommendation) {
+              return recommendation.grinderDirection === "coarser";
+            },
+            detail: "Should go coarser with minimal grinder correction."
+          },
+          {
+            name: "High yield, correct dose",
+            shots: [buildScenarioShot(8, "E", 11, 21, 29.5, 50)],
+            evaluate: function (recommendation) {
+              return recommendation.grinderDirection === "finer";
+            },
+            detail: "Should go finer with minimal grinder correction."
+          },
+          {
+            name: "Dose low, yield on target",
+            shots: [buildScenarioShot(8, "E", 10, 19, 29.5, 42)],
+            evaluate: function (recommendation, baseShot) {
+              return recommendation.grinderDirection === "hold" && recommendation.recommendedGrindTimeSec > baseShot.grindTimeSec;
+            },
+            detail: "Should hold grinder and increase grind time."
+          },
+          {
+            name: "Dose high, yield on target",
+            shots: [buildScenarioShot(8, "E", 12, 23, 29.5, 42)],
+            evaluate: function (recommendation, baseShot) {
+              return recommendation.grinderDirection === "hold" && recommendation.recommendedGrindTimeSec < baseShot.grindTimeSec;
+            },
+            detail: "Should hold grinder and reduce grind time."
+          },
+          {
+            name: "Shot time below range",
+            shots: [buildScenarioShot(8, "E", 11, 21, 24, 38)],
+            evaluate: function (recommendation) {
+              return Boolean(recommendation.shotTimeWarning);
+            },
+            detail: "Should warn and exclude the shot from yield learning."
+          },
+          {
+            name: "Shot time above range",
+            shots: [buildScenarioShot(8, "E", 11, 21, 37, 46)],
+            evaluate: function (recommendation) {
+              return Boolean(recommendation.shotTimeWarning);
+            },
+            detail: "Should warn and exclude the shot from yield learning."
+          },
+          {
+            name: "Contradictory history is damped",
+            shots: [
+              buildScenarioShot(6, "E", 10, 18, 29.8, 51),
+              buildScenarioShot(4, "E", 10, 19, 29.8, 4)
+            ],
+            evaluate: function (recommendation) {
+              return recommendation.grinderDirection === "coarser" && Math.abs(recommendation.cappedAdjustmentMicroSteps) <= 2 && recommendation.contradictionDetected;
+            },
+            detail: "Should follow latest-shot direction but keep the move conservative."
+          },
+          {
+            name: "Huge miss is capped",
+            shots: [buildScenarioShot(7, "E", 10, 21, 29.5, 20)],
+            evaluate: function (recommendation) {
+              return Math.abs(recommendation.cappedAdjustmentMicroSteps) <= EXPLORING_MAX_MICRO_STEPS;
+            },
+            detail: "Should avoid huge jumps while confidence is low."
+          },
+          {
+            name: "Lower boundary clamp",
+            shots: [buildScenarioShot(1, "A", 11, 21, 29.5, 55)],
+            evaluate: function (recommendation) {
+              return recommendation.macro === 1 && recommendation.micro === "A";
+            },
+            detail: "Should not move finer past 1A."
+          },
+          {
+            name: "Upper boundary clamp",
+            shots: [buildScenarioShot(31, "I", 11, 21, 29.5, 25)],
+            evaluate: function (recommendation) {
+              return recommendation.macro === 31 && recommendation.micro === "I";
+            },
+            detail: "Should not move coarser past 31I."
+          },
+          {
+            name: "Tolerance edge holds",
+            shots: [buildScenarioShot(8, "E", 11, 20.7, 29.5, 41)],
+            evaluate: function (recommendation, baseShot) {
+              return recommendation.grinderDirection === "hold" && recommendation.recommendedGrindTimeSec === baseShot.grindTimeSec;
+            },
+            detail: "At tolerance boundaries, recommendation should hold."
+          },
+          {
+            name: "Basket target recompute",
+            shots: [buildScenarioShot(8, "E", 11, 14, 29.5, 28)],
+            options: { targetDose: 14, targetYield: 28 },
+            evaluate: function (recommendation) {
+              return recommendation.targetDoseG === 14 && recommendation.targetYieldG === 28 && recommendation.grinderDirection === "hold";
+            },
+            detail: "Different basket target should recompute cleanly without history corruption."
+          }
+        ];
+
+        return scenarios.map(function (scenario) {
+          const baseShot = scenario.shots[scenario.shots.length - 1];
+          const recommendation = makeRecommendation(baseShot, scenario.shots, {
+            activeBean: null,
+            beanOffset: 0,
+            targetDose: scenario.options && scenario.options.targetDose !== undefined ? scenario.options.targetDose : targetDose,
+            targetYield: scenario.options && scenario.options.targetYield !== undefined ? scenario.options.targetYield : targetYield
+          });
+          const passed = scenario.evaluate(recommendation, baseShot);
+          return {
+            name: scenario.name,
+            passed: passed,
+            detail: scenario.detail,
+            summary: recommendation.grinderDirection + " • " + recommendation.cappedAdjustmentMicroSteps + " micro • " + recommendation.recommendedGrindTimeSec.toFixed(1) + "s grind"
+          };
+        });
+      }
+
+      function renderValidationResults() {
+        const results = runEdgeValidation();
+        els.validationResults.innerHTML = results.map(function (result) {
+          return [
+            '<div class="validation-item">',
+            '<div class="validation-head">',
+            '<div class="validation-name">' + escapeHtml(result.name) + '</div>',
+            '<div class="tag' + (result.passed ? '' : ' bad') + '">' + (result.passed ? 'PASS' : 'FAIL') + '</div>',
+            '</div>',
+            '<div class="muted">' + escapeHtml(result.detail) + '</div>',
+            '<div class="pill number">' + escapeHtml(result.summary) + '</div>',
+            '</div>'
+          ].join("");
+        }).join("");
+      }
+
+      function renderAll() {
+        if (state.shots.length) {
+          const currentRecommendation = state.lastRecommendation;
+          const needsRefresh = !currentRecommendation ||
+            !currentRecommendation.posteriors ||
+            currentRecommendation.posteriors.yieldMean == null ||
+            currentRecommendation.grinderDirection == null;
+          if (needsRefresh) {
+            const baseShot = state.shots.find(function (shot) {
+              return currentRecommendation && shot.id === currentRecommendation.basedOnShotId;
+            }) || state.shots[state.shots.length - 1];
+            state.lastRecommendation = makeRecommendation(baseShot);
+          }
+        }
+        renderPortafilterButtons();
+        updateDerivedPills();
+        renderActiveBean();
+        renderRecommendation();
+        renderRecentShots();
+        renderBeans();
+        renderStats();
+        renderValidationResults();
+        applyActiveTab(state.ui.activeTab || "dialTab");
+      }
+
+      function applyActiveTab(tabId) {
+        els.screens.forEach(function (screen) {
+          screen.classList.toggle("active", screen.id === tabId);
+        });
+        els.tabs.forEach(function (button) {
+          button.classList.toggle("active", button.dataset.tab === tabId);
+        });
+      }
+
+      function capitalize(value) {
+        if (!value) return "";
+        return value.split("-").map(function (part) {
+          return part.charAt(0).toUpperCase() + part.slice(1);
+        }).join("-");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function resetBeanForm() {
+        editingBeanId = null;
+        els.beanNameInput.value = "";
+        els.beanRoasterInput.value = "";
+        els.beanRoastInput.value = "medium";
+        els.beanProcessInput.value = "";
+        els.saveBeanButton.textContent = "Save Bean";
+        els.cancelEditBeanButton.hidden = true;
+      }
+
+      function populateBeanForm(bean) {
+        editingBeanId = bean.id;
+        els.beanNameInput.value = bean.name;
+        els.beanRoasterInput.value = bean.roaster || "";
+        els.beanRoastInput.value = bean.roastLevel;
+        els.beanProcessInput.value = bean.processingMethod || "";
+        els.saveBeanButton.textContent = "Update Bean";
+        els.cancelEditBeanButton.hidden = false;
+      }
+
+      function handleSaveBean() {
+        const name = els.beanNameInput.value.trim();
+        const roaster = els.beanRoasterInput.value.trim();
+        const roastLevel = els.beanRoastInput.value;
+        const processingMethod = els.beanProcessInput.value.trim();
+        if (!name) {
+          window.alert("Bean name is required.");
+          return;
+        }
+        const existing = editingBeanId ? state.beans.find(function (bean) { return bean.id === editingBeanId; }) : null;
+        const bean = {
+          id: existing ? existing.id : uid("bean"),
+          name: name,
+          roaster: roaster,
+          roastLevel: roastLevel,
+          processingMethod: processingMethod,
+          createdAt: existing ? existing.createdAt : new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        if (existing) {
+          state.beans = state.beans.map(function (item) { return item.id === bean.id ? bean : item; });
+        } else {
+          state.beans.unshift(bean);
+        }
+        if (!state.activeBeanId) state.activeBeanId = bean.id;
+        saveState();
+        resetBeanForm();
+        renderAll();
+      }
+
+      function handleBeanListClick(event) {
+        const setActiveId = event.target.getAttribute("data-set-active");
+        const editId = event.target.getAttribute("data-edit-bean");
+        const deleteId = event.target.getAttribute("data-delete-bean");
+
+        if (setActiveId) {
+          state.activeBeanId = setActiveId;
+          saveState();
+          renderAll();
+          return;
+        }
+
+        if (editId) {
+          const bean = state.beans.find(function (item) { return item.id === editId; });
+          if (bean) populateBeanForm(bean);
+          return;
+        }
+
+        if (deleteId) {
+          const bean = state.beans.find(function (item) { return item.id === deleteId; });
+          if (!bean) return;
+          if (!window.confirm('Delete "' + bean.name + '"? Existing shot history will keep its stored bean id.')) return;
+          state.beans = state.beans.filter(function (item) { return item.id !== deleteId; });
+          if (state.activeBeanId === deleteId) state.activeBeanId = state.beans[0] ? state.beans[0].id : null;
+          if (editingBeanId === deleteId) resetBeanForm();
+          saveState();
+          renderAll();
+        }
+      }
+
+      function handleLogShot() {
+        const macro = clamp(Math.round(safeNumber(els.macroInput.value) || 0), 1, 31);
+        const micro = els.microInput.value;
+        const microIndex = getMicroIndex(micro);
+        const grindTimeSec = safeNumber(els.grindTimeInput.value);
+        const doseG = safeNumber(els.doseInput.value);
+        const shotTimeSec = safeNumber(els.shotTimeInput.value);
+        const yieldG = safeNumber(els.yieldInput.value);
+
+        if (
+          microIndex < 0 ||
+          grindTimeSec == null || grindTimeSec <= 0 ||
+          doseG == null || doseG <= 0 ||
+          shotTimeSec == null || shotTimeSec <= 0 ||
+          yieldG == null || yieldG <= 0
+        ) {
+          window.alert("Enter positive shot values before logging.");
+          return;
+        }
+
+        const shot = {
+          id: uid("shot"),
+          beanId: state.activeBeanId,
+          portafilterId: getSelectedPortafilter().id,
+          macro: macro,
+          micro: micro,
+          microIndex: microIndex,
+          grindFloat: formatGrindFloat(macro, microIndex),
+          grindTimeSec: grindTimeSec,
+          doseG: doseG,
+          shotTimeSec: shotTimeSec,
+          yieldG: yieldG,
+          ratio: yieldG / doseG,
+          createdAt: new Date().toISOString()
+        };
+
+        state.shots.push(shot);
+        state.lastRecommendation = makeRecommendation(shot);
+        state.ui.activeTab = "dialTab";
+
+        const recommended = state.lastRecommendation;
+        els.macroInput.value = String(recommended.macro);
+        els.microInput.value = recommended.micro;
+        els.grindTimeInput.value = recommended.recommendedGrindTimeSec.toFixed(1);
+        syncDoseYieldToPortafilter();
+        saveState();
+        renderAll();
+      }
+
+      function handlePortafilterChange() {
+        state.selectedPortafilterId = this && this.portafilterId ? this.portafilterId : state.selectedPortafilterId;
+        syncDoseYieldToPortafilter();
+        if (state.lastRecommendation) {
+          const baseShot = state.shots.find(function (shot) {
+            return shot.id === state.lastRecommendation.basedOnShotId;
+          }) || state.shots[state.shots.length - 1];
+          if (baseShot) state.lastRecommendation = makeRecommendation(baseShot);
+        }
+        saveState();
+        renderAll();
+      }
+
+      function exportData() {
+        els.dataTextarea.value = JSON.stringify(state, null, 2);
+      }
+
+      function importData() {
+        try {
+          const parsed = JSON.parse(els.dataTextarea.value);
+          if (!isValidState(parsed)) throw new Error("Invalid state shape");
+          const nextState = {
+            ...defaultState(),
+            ...parsed,
+            schemaVersion: SCHEMA_VERSION,
+            beans: Array.isArray(parsed.beans) ? parsed.beans : [],
+            shots: Array.isArray(parsed.shots) ? parsed.shots : []
+          };
+          Object.keys(state).forEach(function (key) { delete state[key]; });
+          Object.assign(state, nextState);
+          saveState();
+          resetBeanForm();
+          renderAll();
+          window.alert("Import complete.");
+        } catch (error) {
+          window.alert("Import failed: " + error.message);
+        }
+      }
+
+      function clearData() {
+        if (!window.confirm("Clear all saved beans, shots, and recommendations?")) return;
+        localStorage.removeItem(STORAGE_KEY);
+        const nextDefault = defaultState();
+        Object.keys(state).forEach(function (key) { delete state[key]; });
+        Object.assign(state, nextDefault);
+        resetBeanForm();
+        saveState();
+        renderAll();
+      }
+
+      function attachEvents() {
+        [els.macroInput, els.microInput, els.doseInput, els.yieldInput].forEach(function (input) {
+          input.addEventListener("input", updateDerivedPills);
+        });
+        els.portafilterButtons.addEventListener("click", function (event) {
+          const button = event.target.closest("[data-portafilter-id]");
+          if (!button) return;
+          handlePortafilterChange.call({ portafilterId: button.getAttribute("data-portafilter-id") });
+        });
+        els.logShotButton.addEventListener("click", handleLogShot);
+        els.saveBeanButton.addEventListener("click", handleSaveBean);
+        els.cancelEditBeanButton.addEventListener("click", resetBeanForm);
+        els.beanList.addEventListener("click", handleBeanListClick);
+
+        els.tabs.forEach(function (button) {
+          button.addEventListener("click", function () {
+            state.ui.activeTab = button.dataset.tab;
+            saveState();
+            applyActiveTab(state.ui.activeTab);
+          });
+        });
+
+        els.dataButton.addEventListener("click", function () {
+          exportData();
+          els.dataModal.showModal();
+        });
+        els.closeDataModalButton.addEventListener("click", function () {
+          els.dataModal.close();
+        });
+        els.exportButton.addEventListener("click", exportData);
+        els.importButton.addEventListener("click", importData);
+        els.clearButton.addEventListener("click", clearData);
+      }
+
+      fillMicroSelect();
+      syncDoseYieldToPortafilter();
+      attachEvents();
+      renderAll();
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./sw.js").catch(function (error) {
+            console.warn("Service worker registration failed", error);
+          });
+        });
+      }
+    }());
+  </script>
+</body>
+</html>
