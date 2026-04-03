@@ -30,8 +30,7 @@
       --radius: 22px;
       --mono: "Avenir Next Condensed", "SFMono-Regular", "Menlo", monospace;
       --sans: "Chalkboard SE", "Marker Felt", "Noteworthy", "Trebuchet MS", sans-serif;
-      --sans-alt: "Chalkboard SE", "Noteworthy", "Arial Rounded MT Bold", sans-serif;
-    }
+      --sans-alt: "Chalkboard SE", "Noteworthy", "Arial Rounded MT Bold", sans-serif;    }
 
     * {
       box-sizing: border-box;
@@ -46,8 +45,7 @@
         linear-gradient(180deg, #2b2a27 0%, #1f1e1c 24%, #171715 100%);
       color: var(--text);
       font-family: var(--sans);
-      background-attachment: fixed;
-    }
+      background-attachment: fixed;    }
 
     body {
       padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
@@ -65,8 +63,7 @@
         radial-gradient(circle at 80% 35%, rgba(255,255,255,0.12) 0 1px, transparent 1px),
         radial-gradient(circle at 40% 70%, rgba(255,255,255,0.12) 0 1px, transparent 1px);
       background-size: 180px 180px, 230px 230px, 260px 260px;
-      mix-blend-mode: screen;
-    }
+      mix-blend-mode: screen;    }
 
     button, input, select, textarea {
       font: inherit;
@@ -75,8 +72,7 @@
 
     .app {
       min-height: 100vh;
-      padding-bottom: calc(108px + env(safe-area-inset-bottom));
-    }
+      padding-bottom: calc(108px + env(safe-area-inset-bottom));    }
 
     .topbar {
       position: sticky;
@@ -85,15 +81,13 @@
       backdrop-filter: blur(10px);
       background: rgba(26, 25, 23, 0.92);
       border-bottom: 1px dashed var(--line);
-      padding: 14px 16px 12px;
-    }
+      padding: 14px 16px 12px;    }
 
     .topbar-row {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
-    }
+      gap: 10px;    }
 
     .title-wrap h1 {
       margin: 0;
@@ -109,15 +103,13 @@
       color: var(--muted);
       font-size: 0.84rem;
       letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
+      text-transform: uppercase;    }
 
     .top-actions {
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      flex-shrink: 0;
-    }
+      flex-shrink: 0;    }
 
     .saved-indicator {
       min-width: 62px;
@@ -137,8 +129,7 @@
     .danger-button,
     .tab-button,
     .mini-button,
-    .basket-button {
-      appearance: none;
+    .basket-button {      appearance: none;
       border: 0;
       cursor: pointer;
       transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
@@ -149,8 +140,7 @@
     .danger-button:active,
     .tab-button:active,
     .mini-button:active,
-    .basket-button:active {
-      transform: scale(0.98);
+    .basket-button:active {      transform: scale(0.98);
     }
 
     .ghost-button {
@@ -164,8 +154,7 @@
     .content {
       padding: 14px;
       display: grid;
-      gap: 14px;
-    }
+      gap: 14px;    }
 
     .screen {
       display: none;
@@ -195,8 +184,7 @@
       right: 16px;
       top: 12px;
       border-top: 1px dashed rgba(255, 255, 255, 0.08);
-      opacity: 0.7;
-    }
+      opacity: 0.7;    }
 
     .card h2,
     .card h3,
@@ -218,8 +206,7 @@
       text-transform: uppercase;
       letter-spacing: 0.11em;
       font-size: 0.72rem;
-      font-family: var(--sans-alt);
-    }
+      font-family: var(--sans-alt);    }
 
     .muted {
       color: var(--muted);
@@ -231,8 +218,7 @@
       padding: 14px;
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.03);
-      border: 1px dashed rgba(255, 255, 255, 0.18);
-    }
+      border: 1px dashed rgba(255, 255, 255, 0.18);    }
 
     .grid-2,
     .grid-3 {
@@ -245,14 +231,12 @@
     }
 
     .grid-3 {
-      grid-template-columns: minmax(0, 1fr);
-    }
+      grid-template-columns: minmax(0, 1fr);    }
 
     .field {
       display: grid;
       gap: 8px;
-      min-width: 0;
-    }
+      min-width: 0;    }
 
     .field label {
       font-size: 0.84rem;
@@ -269,15 +253,13 @@
       padding: 14px 14px;
       min-height: 48px;
       outline: none;
-      font-family: var(--sans);
-    }
+      font-family: var(--sans);    }
 
     input:focus,
     select:focus,
     textarea:focus {
       border-color: rgba(244, 237, 224, 0.5);
-      box-shadow: 0 0 0 3px rgba(244, 237, 224, 0.08);
-    }
+      box-shadow: 0 0 0 3px rgba(244, 237, 224, 0.08);    }
 
     .number {
       font-family: var(--mono);
@@ -328,7 +310,6 @@
       font-family: var(--mono);
       color: var(--chalk);
     }
-
     .pill-row {
       display: flex;
       flex-wrap: wrap;
@@ -357,8 +338,7 @@
     .pill.bad {
       color: var(--danger);
       background: rgba(156, 108, 104, 0.16);
-      border-color: rgba(231, 196, 192, 0.34);
-    }
+      border-color: rgba(231, 196, 192, 0.34);    }
 
     .action-button,
     .danger-button,
@@ -366,16 +346,14 @@
       border-radius: 18px;
       padding: 14px 16px;
       font-weight: 600;
-      font-family: var(--sans-alt);
-    }
+      font-family: var(--sans-alt);    }
 
     .action-button {
       width: 100%;
       background: rgba(143, 106, 71, 0.18);
       color: var(--chalk);
       border: 1px solid rgba(187, 148, 108, 0.52);
-      box-shadow: none;
-    }
+      box-shadow: none;    }
 
     .danger-button {
       width: 100%;
@@ -387,8 +365,7 @@
     .mini-button {
       background: transparent;
       color: var(--chalk);
-      border: 1px dashed rgba(255, 255, 255, 0.22);
-    }
+      border: 1px dashed rgba(255, 255, 255, 0.22);    }
 
     .recommendation {
       display: grid;
@@ -397,8 +374,7 @@
 
     .recommendation-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 12px;
+      grid-template-columns: minmax(0, 1fr);      gap: 12px;
     }
 
     .metric {
@@ -406,8 +382,7 @@
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.025);
       border: 1px dashed rgba(255, 255, 255, 0.18);
-      min-width: 0;
-    }
+      min-width: 0;    }
 
     .metric-label {
       font-size: 0.77rem;
@@ -421,8 +396,7 @@
       overflow-wrap: anywhere;
     }
 
-    .metric-value.number {
-      font-family: var(--mono);
+    .metric-value.number {      font-family: var(--mono);
     }
 
     .confidence {
@@ -433,16 +407,14 @@
     .bar {
       width: 100%;
       height: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);      border-radius: 999px;
       overflow: hidden;
     }
 
     .bar-fill {
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, rgba(143, 106, 71, 0.85), rgba(247, 241, 231, 0.85));
-      width: 0%;
+      background: linear-gradient(90deg, rgba(143, 106, 71, 0.85), rgba(247, 241, 231, 0.85));      width: 0%;
       transition: width 220ms ease;
     }
 
@@ -450,8 +422,7 @@
     .shot-list,
     .equipment-list,
     .stats-grid,
-    .validation-list {
-      display: grid;
+    .validation-list {      display: grid;
       gap: 12px;
     }
 
@@ -460,24 +431,21 @@
       padding: 14px;
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.025);
-      border: 1px dashed rgba(255, 255, 255, 0.16);
-    }
+      border: 1px dashed rgba(255, 255, 255, 0.16);    }
 
     .bean-head,
     .shot-head {
       display: flex;
       align-items: start;
       justify-content: space-between;
-      flex-direction: column;
-      gap: 10px;
+      flex-direction: column;      gap: 10px;
       margin-bottom: 10px;
     }
 
     .bean-actions {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
-    }
+      flex-wrap: wrap;    }
 
     .bean-meta,
     .shot-meta {
@@ -492,7 +460,6 @@
       font-family: var(--sans-alt);
       line-height: 1;
     }
-
     .tag {
       display: inline-flex;
       align-items: center;
@@ -501,14 +468,12 @@
       background: rgba(143, 106, 71, 0.14);
       color: var(--chalk);
       font-size: 0.76rem;
-      border: 1px dashed rgba(255, 255, 255, 0.12);
-    }
+      border: 1px dashed rgba(255, 255, 255, 0.12);    }
 
     .empty-state {
       padding: 18px;
       border-radius: 18px;
-      border: 1px dashed rgba(255, 255, 255, 0.22);
-      color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, 0.22);      color: var(--muted);
       text-align: center;
     }
 
@@ -520,8 +485,7 @@
       z-index: 40;
       padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
       background: linear-gradient(180deg, rgba(23, 23, 21, 0), rgba(23, 23, 21, 0.95) 18%, rgba(23, 23, 21, 0.98));
-      backdrop-filter: blur(12px);
-    }
+      backdrop-filter: blur(12px);    }
 
     .tabs {
       display: grid;
@@ -530,13 +494,11 @@
       padding: 8px;
       border-radius: 24px;
       background: rgba(31, 30, 28, 0.95);
-      border: 1px dashed var(--line);
-      box-shadow: var(--shadow);
+      border: 1px dashed var(--line);      box-shadow: var(--shadow);
     }
 
     .tab-button {
-      padding: 12px 8px;
-      border-radius: 18px;
+      padding: 12px 8px;      border-radius: 18px;
       background: transparent;
       color: var(--muted);
       font-weight: 600;
@@ -549,16 +511,14 @@
     .tab-button.active {
       color: var(--chalk);
       background: rgba(143, 106, 71, 0.2);
-      border: 1px solid rgba(187, 148, 108, 0.44);
-    }
+      border: 1px solid rgba(187, 148, 108, 0.44);    }
 
     dialog {
       width: min(92vw, 520px);
       border: 1px dashed var(--line-strong);
       border-radius: 24px;
       padding: 0;
-      background: #242320;
-      color: var(--text);
+      background: #242320;      color: var(--text);
       box-shadow: var(--shadow);
     }
 
@@ -605,8 +565,7 @@
 
     .validation-name {
       font-family: var(--sans-alt);
-      font-size: 1rem;
-    }
+      font-size: 1rem;    }
 
     .list-inline {
       display: flex;
@@ -643,7 +602,6 @@
         flex-direction: row;
       }
     }
-
     @media (min-width: 720px) {
       .content {
         max-width: 760px;
@@ -679,8 +637,7 @@
           <span class="chalk-line" aria-hidden="true"></span>
           <div id="portafilterButtons" class="basket-selector" aria-label="Included basket"></div>
           <div style="height: 12px;"></div>
-          <div class="grid-2">
-            <div class="metric">
+          <div class="grid-2">            <div class="metric">
               <div class="metric-label">Target recipe</div>
               <div id="targetRecipeValue" class="metric-value">7g in → 14g out</div>
             </div>
@@ -711,7 +668,6 @@
             <div id="badgePill" class="tag">Exploring</div>
           </div>
           <span class="chalk-line" aria-hidden="true"></span>
-
           <div class="grid-2">
             <div class="field">
               <label for="macroInput">Macro dial</label>
@@ -762,8 +718,7 @@
               <h2>Next adjustment</h2>
             </div>
           </div>
-          <span class="chalk-line" aria-hidden="true"></span>
-          <div id="recommendationBody" class="empty-state">Log your first shot to generate a grinder and grind-time recommendation.</div>
+          <span class="chalk-line" aria-hidden="true"></span>          <div id="recommendationBody" class="empty-state">Log your first shot to generate a grinder and grind-time recommendation.</div>
         </article>
 
         <article class="card">
@@ -773,8 +728,7 @@
               <h2>Learning history</h2>
             </div>
           </div>
-          <span class="chalk-line" aria-hidden="true"></span>
-          <div id="recentShots" class="shot-list">
+          <span class="chalk-line" aria-hidden="true"></span>          <div id="recentShots" class="shot-list">
             <div class="empty-state">No shots logged yet.</div>
           </div>
         </article>
@@ -789,7 +743,6 @@
             </div>
           </div>
           <span class="chalk-line" aria-hidden="true"></span>
-
           <div class="grid-2">
             <div class="field">
               <label for="beanNameInput">Bean name</label>
@@ -832,8 +785,7 @@
               <h2>Active bean drives the prior</h2>
             </div>
           </div>
-          <span class="chalk-line" aria-hidden="true"></span>
-          <div id="beanList" class="bean-list">
+          <span class="chalk-line" aria-hidden="true"></span>          <div id="beanList" class="bean-list">
             <div class="empty-state">Create your first bean to start tracking roast-based offsets.</div>
           </div>
         </article>
@@ -849,8 +801,7 @@
           </div>
           <span class="chalk-line" aria-hidden="true"></span>
           <p>The grinder model now treats your machine program as a fixed-time shot. It learns how yield changes with grinder setting, then uses yield error to decide direction: low yield means go coarser, high yield means go finer.</p>
-          <p>Dose is adjusted separately through grind time. Recommendation priority is always <span class="number">micro</span> first, then <span class="number">macro</span>, then <span class="number">grind time</span>.</p>
-        </article>
+          <p>Dose is adjusted separately through grind time. Recommendation priority is always <span class="number">micro</span> first, then <span class="number">macro</span>, then <span class="number">grind time</span>.</p>        </article>
 
         <article class="card">
           <div class="card-title">
@@ -859,8 +810,7 @@
               <h2>Current picture</h2>
             </div>
           </div>
-          <span class="chalk-line" aria-hidden="true"></span>
-          <div id="statsGrid" class="stats-grid"></div>
+          <span class="chalk-line" aria-hidden="true"></span>          <div id="statsGrid" class="stats-grid"></div>
         </article>
 
         <article class="card">
@@ -876,13 +826,11 @@
 
         <article class="card">
           <div class="card-title">
-            <div>
-              <div class="eyebrow">Equipment</div>
+            <div>              <div class="eyebrow">Equipment</div>
               <h2>Setup reference</h2>
             </div>
           </div>
-          <span class="chalk-line" aria-hidden="true"></span>
-          <div class="equipment-list">
+          <span class="chalk-line" aria-hidden="true"></span>          <div class="equipment-list">
             <div class="metric">
               <div class="metric-label">Grinder</div>
               <div class="metric-value">Baratza Sette 270</div>
@@ -960,8 +908,7 @@
       const YIELD_TOLERANCE = 1.0;
       const EXPLORING_MAX_MICRO_STEPS = 3;
       const LEARNING_MAX_MICRO_STEPS = 9;
-      const CONFIDENT_MAX_MICRO_STEPS = 12;
-      const MIN_GRIND_TIME = 4;
+      const CONFIDENT_MAX_MICRO_STEPS = 12;      const MIN_GRIND_TIME = 4;
       const MAX_GRIND_TIME = 20;
 
       const els = {
@@ -973,8 +920,7 @@
         importButton: document.getElementById("importButton"),
         clearButton: document.getElementById("clearButton"),
         dataTextarea: document.getElementById("dataTextarea"),
-        portafilterButtons: document.getElementById("portafilterButtons"),
-        targetRecipeValue: document.getElementById("targetRecipeValue"),
+        portafilterButtons: document.getElementById("portafilterButtons"),        targetRecipeValue: document.getElementById("targetRecipeValue"),
         targetPill: document.getElementById("targetPill"),
         equipmentTargetRecipe: document.getElementById("equipmentTargetRecipe"),
         macroInput: document.getElementById("macroInput"),
@@ -1000,8 +946,7 @@
         cancelEditBeanButton: document.getElementById("cancelEditBeanButton"),
         beanList: document.getElementById("beanList"),
         statsGrid: document.getElementById("statsGrid"),
-        validationResults: document.getElementById("validationResults"),
-        tabs: Array.from(document.querySelectorAll(".tab-button")),
+        validationResults: document.getElementById("validationResults"),        tabs: Array.from(document.querySelectorAll(".tab-button")),
         screens: Array.from(document.querySelectorAll(".screen"))
       };
 
@@ -1143,7 +1088,6 @@
       function isShotTimeInRange(shotTimeSec) {
         return shotTimeSec >= MIN_TARGET_SHOT_TIME && shotTimeSec <= MAX_TARGET_SHOT_TIME;
       }
-
       function posteriorForSlope(observations, prior) {
         if (!observations.length) {
           return {
@@ -1191,8 +1135,7 @@
 
       function getDosePosterior(shotSet) {
         return posteriorForSlope(
-          (shotSet || state.shots).map(function (shot) {
-            return { x: shot.grindTimeSec, y: shot.doseG };
+          (shotSet || state.shots).map(function (shot) {            return { x: shot.grindTimeSec, y: shot.doseG };
           }),
           DOSE_PRIOR
         );
@@ -1323,8 +1266,7 @@
           macro: beanAdjustedSetting.macro,
           micro: beanAdjustedSetting.micro,
           microIndex: beanAdjustedSetting.microIndex,
-          grindFloat: beanAdjustedSetting.grindFloat,
-          recommendedGrindTimeSec: round(recommendedGrindTimeSec, 1),
+          grindFloat: beanAdjustedSetting.grindFloat,          recommendedGrindTimeSec: round(recommendedGrindTimeSec, 1),
           targetShotTimeSec: TARGET_SHOT_TIME,
           confidence: confidence.percent,
           badge: confidence.badge,
@@ -1346,8 +1288,7 @@
           conservativeReason: conservativeReason,
           posteriors: {
             yieldMean: round(yieldPosterior.mean, 3),
-            yieldVariance: round(yieldPosterior.variance, 3),
-            doseMean: round(dosePosterior.mean, 3),
+            yieldVariance: round(yieldPosterior.variance, 3),            doseMean: round(dosePosterior.mean, 3),
             doseVariance: round(dosePosterior.variance, 3)
           }
         };
@@ -1388,8 +1329,7 @@
             '<span class="basket-dose">' + item.dose + 'g</span>',
             '<span class="basket-label">' + escapeHtml(item.basketLabel) + '</span>',
             '</button>'
-          ].join("");
-        }).join("");
+          ].join("");        }).join("");
       }
 
       function syncDoseYieldToPortafilter() {
@@ -1439,8 +1379,7 @@
         const doseSlope = recommendation && recommendation.posteriors ? (recommendation.posteriors.doseMean != null ? recommendation.posteriors.doseMean : dosePosterior.mean) : dosePosterior.mean;
         const recommendationYieldError = recommendation && recommendation.yieldError != null ? recommendation.yieldError : 0;
         const recommendationDoseError = recommendation && recommendation.doseError != null ? recommendation.doseError : 0;
-        const recommendationDirection = recommendation && recommendation.grinderDirection ? recommendation.grinderDirection : "hold";
-        els.badgePill.textContent = confidence.badge;
+        const recommendationDirection = recommendation && recommendation.grinderDirection ? recommendation.grinderDirection : "hold";        els.badgePill.textContent = confidence.badge;
         if (!recommendation) {
           els.recommendationBody.className = "empty-state";
           els.recommendationBody.textContent = "Log your first shot to generate a grinder and grind-time recommendation.";
@@ -1465,8 +1404,7 @@
           '<div class="pill">Dose error ' + recommendationDoseError.toFixed(1) + "g</div>",
           '<div class="pill">Direction ' + escapeHtml(recommendationDirection) + "</div>",
           '<div class="pill">Move ' + recommendation.cappedAdjustmentMicroSteps + " micro steps</div>",
-          recommendation.contradictionDetected ? '<div class="pill bad">Contradictory history detected</div>' : "",
-          '<div class="pill">Bean offset ' + (recommendation.beanOffset > 0 ? "+" + recommendation.beanOffset : recommendation.beanOffset) + "</div>",
+          recommendation.contradictionDetected ? '<div class="pill bad">Contradictory history detected</div>' : "",          '<div class="pill">Bean offset ' + (recommendation.beanOffset > 0 ? "+" + recommendation.beanOffset : recommendation.beanOffset) + "</div>",
           "</div>",
           '<div class="metric">',
           '<div class="metric-label">Confidence</div>',
@@ -1502,8 +1440,7 @@
             '<div class="tag">' + (bean ? escapeHtml(bean.name) : "No bean") + "</div>",
             "</div>",
             '<div class="shot-meta">',
-            '<span class="tag number">' + shot.grindTimeSec.toFixed(1) + "s grind</span>",
-            '<span class="tag number">' + shot.shotTimeSec.toFixed(1) + "s shot</span>",
+            '<span class="tag number">' + shot.grindTimeSec.toFixed(1) + "s grind</span>",            '<span class="tag number">' + shot.shotTimeSec.toFixed(1) + "s shot</span>",
             '<span class="tag number">' + shot.doseG.toFixed(1) + "g in</span>",
             '<span class="tag number">' + shot.yieldG.toFixed(1) + "g out</span>",
             '<span class="tag number">ratio ' + shot.ratio.toFixed(2) + "</span>",
@@ -1546,8 +1483,7 @@
       function renderStats() {
         const yieldPosterior = getYieldPosterior();
         const dosePosterior = getDosePosterior();
-        const confidence = getConfidence(yieldPosterior, dosePosterior);
-        const activeBean = getActiveBean();
+        const confidence = getConfidence(yieldPosterior, dosePosterior);        const activeBean = getActiveBean();
         const selectedPortafilter = getSelectedPortafilter();
         const averageShotTime = state.shots.length ? state.shots.reduce(function (sum, shot) { return sum + shot.shotTimeSec; }, 0) / state.shots.length : 0;
         const averageRatio = state.shots.length ? state.shots.reduce(function (sum, shot) { return sum + shot.ratio; }, 0) / state.shots.length : 0;
@@ -1560,8 +1496,7 @@
           { label: "Selected basket", value: selectedPortafilter.basketLabel + " • " + selectedPortafilter.dose + "g" },
           { label: "Active bean", value: activeBean ? activeBean.name : "None selected" },
           { label: "Current recommendation", value: recommendation ? recommendation.macro + recommendation.micro + " • " + recommendation.recommendedGrindTimeSec.toFixed(1) + "s grind" : "Awaiting first shot" },
-          { label: "Yield slope posterior", value: round(yieldPosterior.mean, 3).toFixed(3) + " g/step" },
-          { label: "Dose slope posterior", value: round(dosePosterior.mean, 3).toFixed(3) + " g/s" }
+          { label: "Yield slope posterior", value: round(yieldPosterior.mean, 3).toFixed(3) + " g/step" },          { label: "Dose slope posterior", value: round(dosePosterior.mean, 3).toFixed(3) + " g/s" }
         ];
         els.statsGrid.innerHTML = stats.map(function (stat) {
           return '<div class="metric"><div class="metric-label">' + escapeHtml(stat.label) + '</div><div class="metric-value">' + escapeHtml(stat.value) + "</div></div>";
@@ -1740,15 +1675,13 @@
             state.lastRecommendation = makeRecommendation(baseShot);
           }
         }
-        renderPortafilterButtons();
-        updateDerivedPills();
+        renderPortafilterButtons();        updateDerivedPills();
         renderActiveBean();
         renderRecommendation();
         renderRecentShots();
         renderBeans();
         renderStats();
-        renderValidationResults();
-        applyActiveTab(state.ui.activeTab || "dialTab");
+        renderValidationResults();        applyActiveTab(state.ui.activeTab || "dialTab");
       }
 
       function applyActiveTab(tabId) {
@@ -1872,8 +1805,7 @@
           shotTimeSec == null || shotTimeSec <= 0 ||
           yieldG == null || yieldG <= 0
         ) {
-          window.alert("Enter positive shot values before logging.");
-          return;
+          window.alert("Enter positive shot values before logging.");          return;
         }
 
         const shot = {
@@ -1906,8 +1838,7 @@
       }
 
       function handlePortafilterChange() {
-        state.selectedPortafilterId = this && this.portafilterId ? this.portafilterId : state.selectedPortafilterId;
-        syncDoseYieldToPortafilter();
+        state.selectedPortafilterId = this && this.portafilterId ? this.portafilterId : state.selectedPortafilterId;        syncDoseYieldToPortafilter();
         if (state.lastRecommendation) {
           const baseShot = state.shots.find(function (shot) {
             return shot.id === state.lastRecommendation.basedOnShotId;
@@ -1963,8 +1894,7 @@
           const button = event.target.closest("[data-portafilter-id]");
           if (!button) return;
           handlePortafilterChange.call({ portafilterId: button.getAttribute("data-portafilter-id") });
-        });
-        els.logShotButton.addEventListener("click", handleLogShot);
+        });        els.logShotButton.addEventListener("click", handleLogShot);
         els.saveBeanButton.addEventListener("click", handleSaveBean);
         els.cancelEditBeanButton.addEventListener("click", resetBeanForm);
         els.beanList.addEventListener("click", handleBeanListClick);
